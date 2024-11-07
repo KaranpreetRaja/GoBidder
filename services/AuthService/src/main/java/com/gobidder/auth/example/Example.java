@@ -27,6 +27,9 @@ public class Example {
     }
 
     public Long getId() {
+        System.out.println("test");
+        System.out.println("test");System.out.println("test");
+        System.out.println("ahh");
         return id;
     }
 
