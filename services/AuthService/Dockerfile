@@ -19,8 +19,7 @@ RUN mvn package -DskipTests
 
 # === Stage 2: Run JAR file ===
 # Use an official OpenJDK image to run the app
-#FROM openjdk:17-jdk-slim
-FROM openjdk:17-alpine
+FROM openjdk:17-jdk-slim
 
 # Set working directory
 WORKDIR /app
@@ -30,7 +29,6 @@ RUN mkdir data
 
 # Copy the JAR file from the build stage
 COPY --from=build-stage /app/target/*.jar app.jar
-#RUN cp /app/target/*.jar app.jar
 
 # Expose the port for the server to run on
 EXPOSE 8081
