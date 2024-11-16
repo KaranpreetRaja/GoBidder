@@ -1,8 +1,8 @@
 services:
   auth_service:
     build:
-      context: ./services/AuthService
-      dockerfile: Dockerfile
+      context: ./services
+      dockerfile: AuthService/Dockerfile
     ports:
       - "8081:8081"
     volumes:
