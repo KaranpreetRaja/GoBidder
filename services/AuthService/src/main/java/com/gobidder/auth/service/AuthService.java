@@ -3,6 +3,7 @@ package com.gobidder.auth.service;
 import com.gobidder.auth.dtos.LoginDto;
 import com.gobidder.auth.dtos.RegisterDto;
 import com.gobidder.auth.model.User;
+import com.gobidder.auth.model.PaymentInfo;
 import com.gobidder.auth.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,10 +29,17 @@ public class AuthService {
     }
 
     public User signup(RegisterDto input) {
+        PaymentInfo paymentInfo = new PaymentInfo()
+                .setCardNumber(input.getCardNumber())
+                .setCsv(input.getCsv())
+                .setExpirationDate(input.getExpirationDate())
+                .setBillingAddress(input.getBillingAddress());
+
         User user = new User()
                 .setFullName(input.getFullName())
                 .setEmail(input.getEmail())
-                .setPassword(passwordEncoder.encode(input.getPassword()));
+                .setPassword(passwordEncoder.encode(input.getPassword()))
+                .setPaymentInfo(paymentInfo);
 
         return userRepository.save(user);
     }

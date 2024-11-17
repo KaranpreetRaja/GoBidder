@@ -7,17 +7,17 @@ This service authenticates users and sets up authorization for their requests.
 To run this service in a Docker container (from this directory), you can use
 
 ```shell
-docker build -t auth_service .
+docker build -t auth-service .
 ```
 
 ```shell
-docker run -it --rm -p 8081:8081 auth_service
+docker run -it --rm -p 8081:8081 auth-service
 ```
 
 You can also use Docker Compose from the parent directory.
 
 ```shell
-docker compose up auth_service -d
+docker compose up auth-service -d
 ```
 
 ## Running Locally

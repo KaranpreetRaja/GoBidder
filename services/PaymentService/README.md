@@ -7,17 +7,17 @@ This service is responsible for handling payments.
 To run this service in a Docker container (from this directory), you can use
 
 ```shell
-docker build -t payment_service .
+docker build -t payment-service .
 ```
 
 ```shell
-docker run -it --rm -p 8081:8081 payment_service
+docker run -it --rm -p 8081:8081 payment-service
 ```
 
 You can also use Docker Compose from the parent directory.
 
 ```shell
-docker compose up payment_service -d
+docker compose up payment-service -d
 ```
 
 ## Running Locally
