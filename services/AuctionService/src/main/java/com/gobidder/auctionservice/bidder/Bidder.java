@@ -1,5 +1,6 @@
 package com.gobidder.auctionservice.bidder;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.gobidder.auctionservice.auction.Auction;
 import jakarta.persistence.*;
 
@@ -10,8 +11,8 @@ public class Bidder {
     private Long id;
     private Long userId;
     private Double bidderPrice;
-    @OneToOne
-    @JoinColumn(name="auctionId", referencedColumnName = "id")
+    @OneToOne(mappedBy = "highestBidder", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private Auction auction;
 
     public Bidder() {

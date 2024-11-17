@@ -4,6 +4,7 @@ import com.gobidder.auctionservice.auction.builder.AuctionBuilder;
 import com.gobidder.auctionservice.auction.dto.AuctionCreateRequestDto;
 import com.gobidder.auctionservice.auction.strategy.AuctionStrategy;
 import com.gobidder.auctionservice.auction.strategy.factory.AuctionStrategyFactory;
+import com.gobidder.auctionservice.bidder.Bidder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
 
 @Service
 public class AuctionService {
@@ -59,16 +59,20 @@ public class AuctionService {
         return auction;
     }
 
-    public Auction get(Long id) {
+    public synchronized Auction get(Long id) {
         return this.auctionRepository.findById(id).orElseThrow(
             () -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
-                "Example not found"
+                "Auction with id " + id + " not found"
             )
         );
     }
 
-    public Auction startAuction(Long auctionId) {
+    public void assertAuctionExists(Long auctionId) {
+        this.get(auctionId);
+    }
+
+    public synchronized Auction startAuction(Long auctionId) {
         Auction auction = this.get(auctionId);
         if (auction.getStatus().equals(AuctionStatusEnum.ACTIVE)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Auction already started");
@@ -107,8 +111,17 @@ public class AuctionService {
         this.auctionRepository.save(auction);
     }
 
+    public synchronized Auction updateHighestBidder(Auction auction, Bidder bidder) {
+        auction.setHighestBidder(bidder);
+        return this.auctionRepository.save(auction);
+    }
+
     public synchronized void endAuction(Auction auction) {
-        auction.setStatus(AuctionStatusEnum.CANCELLED);
+        if (auction.getHighestBidder() == null) {
+            auction.setStatus(AuctionStatusEnum.CANCELLED);
+        } else {
+            auction.setStatus(AuctionStatusEnum.WON);
+        }
         this.auctionRepository.save(auction);
     }
 
@@ -127,29 +140,34 @@ public class AuctionService {
 
         this.taskScheduler.schedule(
             () -> {
+                Auction a = this.get(auction.getId());
+
                 logger.info("Reducing price of auction id {} by {}",
-                    auction.getId(), PRICE_DECREASE_AMOUNT);
+                    a.getId(), PRICE_DECREASE_AMOUNT);
 
                 // Get strategy
                 AuctionStrategyFactory factory = AuctionStrategyFactory.getInstance();
-                AuctionStrategy strategy = factory.getAuctionStrategy(auction);
+                AuctionStrategy strategy = factory.getAuctionStrategy(a);
 
-                if (auction.getStatus().equals(AuctionStatusEnum.ACTIVE)) {
-                    if (strategy.isEnding(auction)) {
-                        logger.info("Ending Dutch auction id {}", auction.getId());
+                if (a.getStatus().equals(AuctionStatusEnum.ACTIVE)) {
+                    if (strategy.isEnding(a)) {
+                        logger.info("Ending Dutch auction id {}", a.getId());
                         // End auction
-                        this.endAuction(auction);
+                        this.endAuction(a);
                     } else {
                         // Decrease price
                         this.decreasePrice(
-                            auction,
+                            a,
                             PRICE_DECREASE_AMOUNT
                         );
                         logger.info("Scheduling another Dutch price decrease for auction id {}",
-                            auction.getId());
+                            a.getId());
                         // Reschedule task
-                        this.scheduleAuctionPriceDecrease(auction);
+                        this.scheduleAuctionPriceDecrease(a);
                     }
+                } else {
+                    logger.info("Dutch auction id {} not active, not scheduling further",
+                        a.getId());
                 }
             },
             auctionPriceDecreaseInstant
@@ -173,22 +191,27 @@ public class AuctionService {
 
         this.taskScheduler.schedule(
             () -> {
-                logger.info("Preparing to end auction id {} (timeout)", auction.getId());
+                Auction a = this.get(auction.getId());
+
+                logger.info("Preparing to end auction id {} (timeout)", a.getId());
 
                 // Get strategy
                 AuctionStrategyFactory factory = AuctionStrategyFactory.getInstance();
-                AuctionStrategy strategy = factory.getAuctionStrategy(auction);
+                AuctionStrategy strategy = factory.getAuctionStrategy(a);
 
-                if (auction.getStatus().equals(AuctionStatusEnum.ACTIVE)) {
-                    if (strategy.isEnding(auction)) {
-                        logger.info("Ending auction id {} (timeout)", auction.getId());
+                if (a.getStatus().equals(AuctionStatusEnum.ACTIVE)) {
+                    if (strategy.isEnding(a)) {
+                        logger.info("Ending auction id {} (timeout)", a.getId());
                         // End auction
-                        this.endAuction(auction);
+                        this.endAuction(a);
                     } else {
-                        logger.info("Auction id {} not ending, rescheduling", auction.getId());
+                        logger.info("Auction id {} not ending, rescheduling", a.getId());
                         // Reschedule task
-                        this.scheduleForwardAuctionEnd(auction);
+                        this.scheduleForwardAuctionEnd(a);
                     }
+                } else {
+                    logger.info("Forward auction id {} not active, not scheduling further",
+                        a.getId());
                 }
             },
             auctionEndInstant

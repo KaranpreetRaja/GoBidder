@@ -1,5 +1,6 @@
 package com.gobidder.auctionservice.auction;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.gobidder.auctionservice.bidder.Bidder;
 import jakarta.persistence.*;
 
@@ -26,6 +27,7 @@ public class Auction {
     private LocalDateTime priceUpdatedAt;
     @OneToOne
     @JoinColumn(name="bidderId", referencedColumnName = "id")
+    @JsonBackReference
     private Bidder highestBidder;
 
     public Auction() {

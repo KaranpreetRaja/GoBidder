@@ -8,6 +8,10 @@ public class HighestBidderDto {
     @NotBlank(message = "Highest bidder bid must not be empty")
     private Double bid;
 
+    public HighestBidderDto() {
+        // Empty constructor for Spring Boot serializing/deserializing into JSON
+    }
+
     public HighestBidderDto(Long userId, Double bid) {
         this.userId = userId;
         this.bid = bid;
