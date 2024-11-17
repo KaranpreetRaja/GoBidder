@@ -1,22 +1,31 @@
 package com.gobidder.auctionservice.auction.dto;
 
 import com.gobidder.auctionservice.auction.AuctionTypeEnum;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class AuctionCreateRequestDto {
+    @NotBlank(message = "Auction name cannot be empty")
     private String name;
+    @NotBlank(message = "Auction description cannot be empty")
     private String description;
     private List<String> tags;
     private String currencyType;
+    @NotNull(message = "Auction type cannot be empty")
     private AuctionTypeEnum type;
     private String auctionImageUrl;
+    @NotNull(message = "Auction must have an owner")
     private Long auctionOwnerId;
+    @NotNull(message = "Auction must have an initial price")
     private Double initialPrice;
     private String location;
+    @NotNull(message = "Auction must have a start time")
     private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private Integer duration;
+    private Double minimumPrice;
 
     public AuctionCreateRequestDto() {
         // Empty constructor for Spring Boot serializing/deserializing into JSON
@@ -33,7 +42,8 @@ public class AuctionCreateRequestDto {
         Double initialPrice,
         String location,
         LocalDateTime startTime,
-        LocalDateTime endTime
+        Integer duration,
+        Double minimumPrice
     ) {
         this.name = name;
         this.description = description;
@@ -45,7 +55,8 @@ public class AuctionCreateRequestDto {
         this.initialPrice = initialPrice;
         this.location = location;
         this.startTime = startTime;
-        this.endTime = endTime;
+        this.duration = duration;
+        this.minimumPrice = minimumPrice;
     }
 
     public String getName() {
@@ -128,11 +139,19 @@ public class AuctionCreateRequestDto {
         this.startTime = startTime;
     }
 
-    public LocalDateTime getEndTime() {
-        return endTime;
+    public Integer getDuration() {
+        return duration;
     }
 
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
+    public void setDuration(Integer duration) {
+        this.duration = duration;
+    }
+
+    public Double getMinimumPrice() {
+        return minimumPrice;
+    }
+
+    public void setMinimumPrice(Double minimumPrice) {
+        this.minimumPrice = minimumPrice;
     }
 }

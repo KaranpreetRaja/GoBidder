@@ -28,7 +28,9 @@ public abstract class AuctionBuilder {
 
     public abstract Auction build();
 
-    public abstract AuctionBuilder endTime(LocalDateTime endTime);
+    public abstract AuctionBuilder duration(Integer duration);
+
+    public abstract AuctionBuilder minimumPrice(Double minimumPrice);
 
     public AuctionBuilder name(String name) {
         this.name = name;
@@ -62,6 +64,11 @@ public abstract class AuctionBuilder {
 
     public AuctionBuilder startTime(LocalDateTime startTime) {
         this.startTime = startTime;
+        return this;
+    }
+
+    public AuctionBuilder initialPrice(Double initialPrice) {
+        this.initialPrice = initialPrice;
         return this;
     }
 

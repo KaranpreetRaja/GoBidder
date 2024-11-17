@@ -43,6 +43,8 @@ public class ForwardAuctionStrategy implements AuctionStrategy {
     @Override
     public boolean isEnding(Auction auction) {
         LocalDateTime currentTime = LocalDateTime.now();
-        return currentTime.isAfter(auction.getEndTime());
+        LocalDateTime auctionEndTime =
+            auction.getStartTime().plusSeconds(auction.getDuration());
+        return currentTime.isAfter(auctionEndTime);
     }
 }

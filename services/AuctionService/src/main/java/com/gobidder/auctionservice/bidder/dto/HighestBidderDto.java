@@ -1,7 +1,11 @@
 package com.gobidder.auctionservice.bidder.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class HighestBidderDto {
+    @NotBlank(message = "Highest bidder userId must not be empty")
     private Long userId;
+    @NotBlank(message = "Highest bidder bid must not be empty")
     private Double bid;
 
     public HighestBidderDto(Long userId, Double bid) {

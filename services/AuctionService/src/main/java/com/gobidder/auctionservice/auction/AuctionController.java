@@ -1,6 +1,7 @@
 package com.gobidder.auctionservice.auction;
 
 import com.gobidder.auctionservice.auction.dto.AuctionCreateRequestDto;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,13 +21,18 @@ public class AuctionController {
         this.auctionService = auctionService;
     }
 
-    @PostMapping("/auction")
-    public Auction createExample(@RequestBody AuctionCreateRequestDto auctionCreateRequestDto) {
+    @PostMapping("")
+    public Auction createExample(@Valid @RequestBody AuctionCreateRequestDto auctionCreateRequestDto) {
         return this.auctionService.create(auctionCreateRequestDto);
     }
 
-    @GetMapping("/auction/{id}")
+    @GetMapping("/{id}")
     public Auction getAuction(@PathVariable Long id) {
         return this.auctionService.get(id);
+    }
+
+    @PostMapping("/{id}/start")
+    public Auction startAuction(@PathVariable Long id) {
+        return this.auctionService.startAuction(id);
     }
 }

@@ -4,6 +4,8 @@ import com.gobidder.auctionservice.auction.Auction;
 import com.gobidder.auctionservice.auction.dto.CurrentHighestBidderDto;
 
 public class DutchAuctionStrategy implements AuctionStrategy {
+    private static final Double STEP_AMOUNT = 10.0;
+
     private static DutchAuctionStrategy instance = null;
 
     private CurrentHighestBidderDto currentWinner;
@@ -34,7 +36,7 @@ public class DutchAuctionStrategy implements AuctionStrategy {
 
     @Override
     public boolean isEnding(Auction auction) {
-        return currentWinner.getBid() < lowestPrice;
+        return auction.getCurrentPrice() <= auction.getMinimumPrice();
     }
 
     public void lowerPrice() {

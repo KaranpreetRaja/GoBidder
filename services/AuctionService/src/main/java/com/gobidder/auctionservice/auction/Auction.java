@@ -21,7 +21,8 @@ public class Auction {
     private AuctionTypeEnum type;
     private AuctionStatusEnum status;
     private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private Integer duration;
+    private Double minimumPrice;
     private LocalDateTime priceUpdatedAt;
     @OneToOne
     @JoinColumn(name="bidderId", referencedColumnName = "id")
@@ -43,7 +44,8 @@ public class Auction {
         AuctionTypeEnum type,
         AuctionStatusEnum status,
         LocalDateTime startTime,
-        LocalDateTime endTime
+        Integer duration,
+        Double minimumPrice
     ) {
         this.name = name;
         this.description = description;
@@ -56,8 +58,9 @@ public class Auction {
         this.type = type;
         this.status = status;
         this.startTime = startTime;
-        this.endTime = endTime;
+        this.duration = duration;
         this.priceUpdatedAt = startTime;
+        this.minimumPrice = minimumPrice;
     }
 
     public Auction(
@@ -73,7 +76,8 @@ public class Auction {
         AuctionTypeEnum type,
         AuctionStatusEnum status,
         LocalDateTime startTime,
-        LocalDateTime endTime
+        Integer duration,
+        Double minimumPrice
     ) {
         this.id = id;
         this.name = name;
@@ -87,8 +91,9 @@ public class Auction {
         this.type = type;
         this.status = status;
         this.startTime = startTime;
-        this.endTime = endTime;
+        this.duration = duration;
         this.priceUpdatedAt = startTime;
+        this.minimumPrice = minimumPrice;
     }
 
     public Long getId() {
@@ -111,12 +116,12 @@ public class Auction {
         this.startTime = startTime;
     }
 
-    public LocalDateTime getEndTime() {
-        return endTime;
+    public Integer getDuration() {
+        return duration;
     }
 
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
+    public void setDuration(Integer duration) {
+        this.duration = duration;
     }
 
     public Double getInitialPrice() {
@@ -201,6 +206,14 @@ public class Auction {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public Double getMinimumPrice() {
+        return minimumPrice;
+    }
+
+    public void setMinimumPrice(Double minimumPrice) {
+        this.minimumPrice = minimumPrice;
     }
 
     public Bidder getHighestBidder() {
