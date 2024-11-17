@@ -1,4 +1,4 @@
-package ca.gobidder.bid_service;
+package com.gobidder.bid_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

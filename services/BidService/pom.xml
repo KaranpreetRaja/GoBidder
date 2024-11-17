@@ -8,11 +8,11 @@
 		<version>3.3.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>ca.gobidder</groupId>
+	<groupId>com.gobidder</groupId>
 	<artifactId>bid-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>bid-service</name>
-	<description>processes incoming bids</description>
+	<description>Microservice that handles incoming bid requests for the auction platform</description>
 	<url/>
 	<licenses>
 		<license/>
