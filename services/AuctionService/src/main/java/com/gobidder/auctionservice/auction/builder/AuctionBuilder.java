@@ -5,6 +5,12 @@ import com.gobidder.auctionservice.auction.AuctionTypeEnum;
 
 import java.time.LocalDateTime;
 
+/**
+ * Builder class for {@link Auction}.
+ * <p>
+ * There's a lot of parameters to build an {@link Auction} object with some
+ * custom validation, so this class handles all that.
+ */
 public abstract class AuctionBuilder {
 
     protected String name;
@@ -16,6 +22,13 @@ public abstract class AuctionBuilder {
     protected String location;
     protected LocalDateTime startTime;
 
+    /**
+     * Create a builder object for an auction.
+     *
+     * @param auctionTypeEnum The type of auction being built (forward or Dutch).
+     *
+     * @return The auction builder.
+     */
     public static AuctionBuilder builder(AuctionTypeEnum auctionTypeEnum) {
         if (auctionTypeEnum.equals(AuctionTypeEnum.FORWARD)) {
             return new ForwardAuctionBuilder();
@@ -26,10 +39,33 @@ public abstract class AuctionBuilder {
         }
     }
 
+    /**
+     * Build the auction. Also validates the auction before building.
+     *
+     * @return The auction being built.
+     */
     public abstract Auction build();
 
+    /**
+     * Set the duration of the auction. Only works for forward auctions
+     *
+     * @param duration The duration of the forward auction.
+     *
+     * @throws IllegalStateException If this is used to build a Dutch auction.
+     *
+     * @return This builder object so that building can continue.
+     */
     public abstract AuctionBuilder duration(Integer duration);
 
+    /**
+     * Set the minimum price of the auction. Only works for Dutch auctions
+     *
+     * @param minimumPrice The duration of the Dutch auction.
+     *
+     * @throws IllegalStateException If this is used to build a forward auction.
+     *
+     * @return This builder object so that building can continue.
+     */
     public abstract AuctionBuilder minimumPrice(Double minimumPrice);
 
     public AuctionBuilder name(String name) {

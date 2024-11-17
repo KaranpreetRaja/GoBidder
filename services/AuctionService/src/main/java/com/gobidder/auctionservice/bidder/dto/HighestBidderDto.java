@@ -2,6 +2,9 @@ package com.gobidder.auctionservice.bidder.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * Request body for setting the highest bidder of an auction.
+ */
 public class HighestBidderDto {
     @NotBlank(message = "Highest bidder userId must not be empty")
     private Long userId;

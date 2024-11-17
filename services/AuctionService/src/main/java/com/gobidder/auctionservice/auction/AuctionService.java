@@ -33,13 +33,23 @@ public class AuctionService {
         this.taskScheduler = taskScheduler;
     }
 
+    /**
+     * Creates an auction in the database.
+     *
+     * @param auctionCreateRequestDto The request body of the auction create
+     *                                request.
+     *
+     * @return The newly created auction.
+     */
     public Auction create(AuctionCreateRequestDto auctionCreateRequestDto) {
         AuctionTypeEnum auctionType = auctionCreateRequestDto.getType();
         AuctionBuilder auctionBuilder = AuctionBuilder.builder(auctionType);
 
         if (auctionType.equals(AuctionTypeEnum.FORWARD)) {
+            // Forward auctions have a duration
             auctionBuilder.duration(auctionCreateRequestDto.getDuration());
         } else if (auctionType.equals(AuctionTypeEnum.DUTCH)) {
+            // Dutch auctions have a minimum price
             auctionBuilder.minimumPrice(auctionCreateRequestDto.getMinimumPrice());
         }
 
@@ -55,10 +65,22 @@ public class AuctionService {
             .build();
 
         auction = this.auctionRepository.save(auction);
-
+        // Return the newly created auction from the database
         return auction;
     }
 
+    /**
+     * Get an auction from the database by its ID.
+     * <p>
+     * This method is synchronized to prevent dirty reads.
+     *
+     * @param id The ID of the auction to retrieve.
+     *
+     * @return The auction from the database corresponding to the given ID.
+     *
+     * @throws ResponseStatusException If the auction with the given ID does not
+     *                                 exist in the database.
+     */
     public synchronized Auction get(Long id) {
         return this.auctionRepository.findById(id).orElseThrow(
             () -> new ResponseStatusException(
@@ -68,10 +90,28 @@ public class AuctionService {
         );
     }
 
+    /**
+     * Checks if an auction exists in the database. If it exists, nothing
+     * happens. If it does not exist, an exception is thrown.
+     *
+     * @param auctionId The ID of the auction to check.
+     *
+     * @throws ResponseStatusException If the auction with the given ID does not
+     *                                 exist in the database.
+     */
     public void assertAuctionExists(Long auctionId) {
         this.get(auctionId);
     }
 
+    /**
+     * Starts an auction.
+     * <p>
+     * This method is synchronized to prevent race conditions.
+     *
+     * @param auctionId The ID of the auction to start.
+     *
+     * @return The auction from the database after starting.
+     */
     public synchronized Auction startAuction(Long auctionId) {
         Auction auction = this.get(auctionId);
         if (auction.getStatus().equals(AuctionStatusEnum.ACTIVE)) {
@@ -85,15 +125,26 @@ public class AuctionService {
         auction.setStatus(AuctionStatusEnum.ACTIVE);
         auction = this.auctionRepository.save(auction);
 
+        // Schedule auction task for the future
         if (auction.getType().equals(AuctionTypeEnum.FORWARD)) {
             this.scheduleForwardAuctionEnd(auction);
         } else if (auction.getType().equals(AuctionTypeEnum.DUTCH)) {
-            this.scheduleAuctionPriceDecrease(auction);
+            this.scheduleDutchAuctionPriceDecrease(auction);
         }
 
         return auction;
     }
 
+    /**
+     * Decreases the price of a Dutch auction.
+     * <p>
+     * This method is synchronized to prevent race conditions.
+     *
+     * @param auction The auction whose price is being decreased.
+     * @param priceToDecrease The amount to decrease the auction's price by.
+     *
+     * @throws ResponseStatusException If the auction is a forward auction.
+     */
     public synchronized void decreasePrice(Auction auction, double priceToDecrease) {
         if (auction.getType().equals(AuctionTypeEnum.FORWARD)) {
             throw new ResponseStatusException(
@@ -102,20 +153,36 @@ public class AuctionService {
             );
         }
         if (auction.getCurrentPrice() - priceToDecrease < 0) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Cannot decrease auction price below 0"
-            );
+            auction.setCurrentPrice(0.0);
+        } else {
+            auction.setCurrentPrice(auction.getCurrentPrice() - priceToDecrease);
         }
-        auction.setCurrentPrice(auction.getCurrentPrice() - priceToDecrease);
         this.auctionRepository.save(auction);
     }
 
+    /**
+     * Update an auction's highest bidder.
+     * <p>
+     * This method is synchronized to prevent race conditions.
+     *
+     * @param auction The auction to update.
+     * @param bidder The new highest bidder of the auction.
+     *
+     * @return The auction from the database after updating.
+     */
     public synchronized Auction updateHighestBidder(Auction auction, Bidder bidder) {
+        auction.setCurrentPrice(bidder.getBidderPrice());
         auction.setHighestBidder(bidder);
         return this.auctionRepository.save(auction);
     }
 
+    /**
+     * Ends an auction.
+     * <p>
+     * This method is synchronized to prevent race conditions.
+     *
+     * @param auction The auction to end.
+     */
     public synchronized void endAuction(Auction auction) {
         if (auction.getHighestBidder() == null) {
             auction.setStatus(AuctionStatusEnum.CANCELLED);
@@ -125,7 +192,12 @@ public class AuctionService {
         this.auctionRepository.save(auction);
     }
 
-    public void scheduleAuctionPriceDecrease(Auction auction) {
+    /**
+     * Schedule's a Dutch auction's price decrease.
+     *
+     * @param auction The auction to schedule the price decrease of.
+     */
+    public void scheduleDutchAuctionPriceDecrease(Auction auction) {
         if (!auction.getType().equals(AuctionTypeEnum.DUTCH)) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
@@ -163,7 +235,7 @@ public class AuctionService {
                         logger.info("Scheduling another Dutch price decrease for auction id {}",
                             a.getId());
                         // Reschedule task
-                        this.scheduleAuctionPriceDecrease(a);
+                        this.scheduleDutchAuctionPriceDecrease(a);
                     }
                 } else {
                     logger.info("Dutch auction id {} not active, not scheduling further",
@@ -176,6 +248,11 @@ public class AuctionService {
             auction.getId(), auctionPriceDecreaseInstant);
     }
 
+    /**
+     * Schedule's a forward auction's end.
+     *
+     * @param auction The auction to schedule the end of.
+     */
     public void scheduleForwardAuctionEnd(Auction auction) {
         if (!auction.getType().equals(AuctionTypeEnum.FORWARD)) {
             throw new ResponseStatusException(

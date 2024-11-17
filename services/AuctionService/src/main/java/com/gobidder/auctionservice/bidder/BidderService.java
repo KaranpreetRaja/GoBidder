@@ -33,6 +33,13 @@ public class BidderService {
         this.dutchAuctionHighestBidderStrategy = dutchAuctionHighestBidderStrategy;
     }
 
+    /**
+     * Get the singleton instance of a highest bidder auction strategy.
+     *
+     * @param auction The auction to apply the strategy to.
+     *
+     * @return The auction highest bidder strategy.
+     */
     private HighestBidderStrategy getHighestBidderStrategy(Auction auction) {
         if (auction.getType().equals(AuctionTypeEnum.FORWARD)) {
             return this.forwardAuctionHighestBidderStrategy;
@@ -43,6 +50,18 @@ public class BidderService {
         }
     }
 
+    /**
+     * Get the highest bidder of an auction.
+     * <p>
+     * This method is synchronized to prevent dirty reads.
+     *
+     * @param auctionId The ID of the auction to get the highest bidder of.
+     *
+     * @return The highest bidder of the auction.
+     *
+     * @throws ResponseStatusException If the auction does not exist or if the
+     *                                 auction does not have a highest bidder.
+     */
     public synchronized Bidder getHighestBidder(Long auctionId) {
         this.auctionService.assertAuctionExists(auctionId);
 
@@ -53,6 +72,20 @@ public class BidderService {
             ));
     }
 
+    /**
+     * Sets the highest bidder of an auction.
+     * <p>
+     * This method is synchronized to prevent race conditions.
+     *
+     * @param auctionId The ID of the auction to set the highest bidder of.
+     * @param highestBidderDto The new highest bidder of the auction.
+     *
+     * @return The new highest bidder of the auction.
+     *
+     * @throws ResponseStatusException If the auction does not exist, if the
+     *                                 auction is not active, or if the bidder
+     *                                 did not bid high enough.
+     */
     public synchronized Bidder setHighestBidder(Long auctionId, HighestBidderDto highestBidderDto) {
         Auction auction = this.auctionService.get(auctionId);
         if (!auction.getStatus().equals(AuctionStatusEnum.ACTIVE)) {

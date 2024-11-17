@@ -1,7 +1,6 @@
 package com.gobidder.auctionservice.bidder.strategy;
 
 import com.gobidder.auctionservice.auction.Auction;
-import com.gobidder.auctionservice.auction.AuctionRepository;
 import com.gobidder.auctionservice.auction.AuctionService;
 import com.gobidder.auctionservice.bidder.Bidder;
 import com.gobidder.auctionservice.bidder.BidderRepository;
@@ -13,6 +12,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
+/**
+ * Strategy object for Dutch auction-specific highest-bidder behaviors.
+ */
 @Component
 public class DutchAuctionHighestBidderStrategy implements HighestBidderStrategy {
     private final BidderRepository bidderRepository;
@@ -53,6 +55,8 @@ public class DutchAuctionHighestBidderStrategy implements HighestBidderStrategy 
             bidder = this.bidderRepository.save(bidder);
 
             auction = this.auctionService.updateHighestBidder(auction, bidder);
+
+            // End auction immediately
             this.auctionService.endAuction(auction);
         }
         return bidder;

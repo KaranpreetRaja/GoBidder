@@ -12,6 +12,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
+/**
+ * Strategy object for Dutch auction-specific highest-bidder behaviors.
+ */
 @Component
 public class ForwardAuctionHighestBidderStrategy implements HighestBidderStrategy {
     private final BidderRepository bidderRepository;

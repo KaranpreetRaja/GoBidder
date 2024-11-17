@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Request body for creating an auction.
+ */
 public class AuctionCreateRequestDto {
     @NotBlank(message = "Auction name cannot be empty")
     private String name;

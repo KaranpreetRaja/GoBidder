@@ -6,6 +6,9 @@ import com.gobidder.auctionservice.auction.AuctionTypeEnum;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Builds a Dutch auction.
+ */
 public class DutchAuctionBuilder extends AuctionBuilder {
     private Double minimumPrice;
 
@@ -24,6 +27,7 @@ public class DutchAuctionBuilder extends AuctionBuilder {
 
     @Override
     public Auction build() {
+        // Minimum price required for Dutch auctions
         if (this.minimumPrice == null) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,

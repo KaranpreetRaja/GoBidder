@@ -6,6 +6,9 @@ import com.gobidder.auctionservice.auction.AuctionTypeEnum;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Builds a forward auction.
+ */
 public class ForwardAuctionBuilder extends AuctionBuilder {
     private Integer duration;
 
@@ -25,6 +28,7 @@ public class ForwardAuctionBuilder extends AuctionBuilder {
 
     @Override
     public Auction build() {
+        // Duration required for forward auctions
         if (this.duration == null) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,

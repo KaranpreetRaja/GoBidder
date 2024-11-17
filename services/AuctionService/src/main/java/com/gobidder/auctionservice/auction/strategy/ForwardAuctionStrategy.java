@@ -11,6 +11,12 @@ public class ForwardAuctionStrategy implements AuctionStrategy {
         // Private constructor for singleton
     }
 
+    /**
+     * Get the forward auction strategy as a singleton, creating the instance if
+     * it does not yet exist.
+     *
+     * @return The singleton forward auction strategy instance.
+     */
     public static ForwardAuctionStrategy getInstance() {
         if (instance == null) {
             instance = new ForwardAuctionStrategy();
@@ -20,6 +26,8 @@ public class ForwardAuctionStrategy implements AuctionStrategy {
 
     @Override
     public boolean isEnding(Auction auction) {
+        // A forward auction ends when the current time is after the auction's
+        // end time
         LocalDateTime currentTime = LocalDateTime.now();
         LocalDateTime auctionEndTime =
             auction.getStartTime().plusSeconds(auction.getDuration());
