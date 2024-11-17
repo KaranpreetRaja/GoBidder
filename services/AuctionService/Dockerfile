@@ -9,13 +9,13 @@ WORKDIR /app
 COPY pom.xml /
 
 # Copy auth service pom.xml
-COPY AuthService/pom.xml .
+COPY AuctionService/pom.xml .
 
 # Clean outputs
 RUN mvn clean
 
 # Copy source files
-COPY AuthService/src ./src
+COPY AuctionService/src ./src
 
 # Build project with Maven
 RUN mvn package -DskipTests
@@ -34,7 +34,7 @@ RUN mkdir data
 COPY --from=build-stage /app/target/*.jar app.jar
 
 # Expose the port for the server to run on
-EXPOSE 8081
+EXPOSE 8083
 
 # Run the Spring Boot application
 ENTRYPOINT ["java", "-jar", "app.jar"]

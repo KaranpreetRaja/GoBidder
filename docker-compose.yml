@@ -9,6 +9,16 @@ services:
       - auth-data:/app/data
     networks:
       - microservices-network
+  auction-service:
+    build:
+      context: ./services
+      dockerfile: AuctionService/Dockerfile
+    ports:
+      - "8083:8083"
+    volumes:
+      - auth-data:/app/data
+    networks:
+      - microservices-network
   reverse_proxy:
     build:
       context: ./services/ReverseProxy
