@@ -23,6 +23,8 @@ public class DutchAuctionBuilder extends AuctionBuilder {
             this.auctionImageUrl,
             this.auctionOwnerId,
             this.location,
+            this.initialPrice,
+            this.initialPrice,
             AuctionTypeEnum.DUTCH,
             AuctionStatusEnum.NOT_STARTED,
             this.startTime,

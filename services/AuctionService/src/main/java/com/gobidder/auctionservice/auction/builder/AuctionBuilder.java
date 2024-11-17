@@ -12,6 +12,7 @@ public abstract class AuctionBuilder {
     protected String currency;
     protected String auctionImageUrl;
     protected Long auctionOwnerId;
+    protected Double initialPrice;
     protected String location;
     protected LocalDateTime startTime;
 

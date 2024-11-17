@@ -9,6 +9,8 @@ import java.time.LocalDateTime;
 public class ForwardAuctionStrategy implements AuctionStrategy {
     private static ForwardAuctionStrategy instance = null;
 
+    private CurrentHighestBidderDto currentWinner;
+
     private ForwardAuctionStrategy() {
         // Private constructor for singleton
     }
@@ -19,8 +21,6 @@ public class ForwardAuctionStrategy implements AuctionStrategy {
         }
         return instance;
     }
-
-    private CurrentHighestBidderDto currentWinner;
 
     @Override
     public CurrentHighestBidderDto getHighest() {

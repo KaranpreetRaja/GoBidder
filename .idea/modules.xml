@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/GoBidder.iml" filepath="$PROJECT_DIR$/.idea/GoBidder.iml" />
+      <module fileurl="file://$PROJECT_DIR$/services/AuctionService/auctionservice.iml" filepath="$PROJECT_DIR$/services/AuctionService/auctionservice.iml" />
     </modules>
   </component>
 </project>

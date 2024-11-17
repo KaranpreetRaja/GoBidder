@@ -28,6 +28,8 @@ public class ForwardAuctionBuilder extends AuctionBuilder {
             this.auctionImageUrl,
             this.auctionOwnerId,
             this.location,
+            this.initialPrice,
+            this.initialPrice,
             AuctionTypeEnum.FORWARD,
             AuctionStatusEnum.NOT_STARTED,
             this.startTime,

@@ -13,6 +13,7 @@ public class AuctionCreateRequestDto {
     private AuctionTypeEnum type;
     private String auctionImageUrl;
     private Long auctionOwnerId;
+    private Double initialPrice;
     private String location;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
@@ -29,6 +30,7 @@ public class AuctionCreateRequestDto {
         AuctionTypeEnum type,
         String auctionImageUrl,
         Long auctionOwnerId,
+        Double initialPrice,
         String location,
         LocalDateTime startTime,
         LocalDateTime endTime
@@ -40,6 +42,7 @@ public class AuctionCreateRequestDto {
         this.type = type;
         this.auctionImageUrl = auctionImageUrl;
         this.auctionOwnerId = auctionOwnerId;
+        this.initialPrice = initialPrice;
         this.location = location;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -83,6 +86,14 @@ public class AuctionCreateRequestDto {
 
     public void setAuctionOwnerId(Long auctionOwnerId) {
         this.auctionOwnerId = auctionOwnerId;
+    }
+
+    public Double getInitialPrice() {
+        return initialPrice;
+    }
+
+    public void setInitialPrice(Double initialPrice) {
+        this.initialPrice = initialPrice;
     }
 
     public String getLocation() {

@@ -1,5 +1,6 @@
 package com.gobidder.auctionservice.auction;
 
+import com.gobidder.auctionservice.bidder.Bidder;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -15,10 +16,16 @@ public class Auction {
     private String auctionImageUrl;
     private Long auctionOwnerId;
     private String location;
+    private Double initialPrice;
+    private Double currentPrice;
     private AuctionTypeEnum type;
     private AuctionStatusEnum status;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private LocalDateTime priceUpdatedAt;
+    @OneToOne
+    @JoinColumn(name="bidderId", referencedColumnName = "id")
+    private Bidder highestBidder;
 
     public Auction() {
         // Empty constructor for Spring Data JPA
@@ -31,6 +38,8 @@ public class Auction {
         String auctionImageUrl,
         Long auctionOwnerId,
         String location,
+        Double initialPrice,
+        Double currentPrice,
         AuctionTypeEnum type,
         AuctionStatusEnum status,
         LocalDateTime startTime,
@@ -42,10 +51,13 @@ public class Auction {
         this.auctionImageUrl = auctionImageUrl;
         this.auctionOwnerId = auctionOwnerId;
         this.location = location;
+        this.initialPrice = initialPrice;
+        this.currentPrice = currentPrice;
         this.type = type;
         this.status = status;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.priceUpdatedAt = startTime;
     }
 
     public Auction(
@@ -56,6 +68,8 @@ public class Auction {
         String auctionImageUrl,
         Long auctionOwnerId,
         String location,
+        Double initialPrice,
+        Double currentPrice,
         AuctionTypeEnum type,
         AuctionStatusEnum status,
         LocalDateTime startTime,
@@ -68,10 +82,13 @@ public class Auction {
         this.auctionImageUrl = auctionImageUrl;
         this.auctionOwnerId = auctionOwnerId;
         this.location = location;
+        this.initialPrice = initialPrice;
+        this.currentPrice = currentPrice;
         this.type = type;
         this.status = status;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.priceUpdatedAt = startTime;
     }
 
     public Long getId() {
@@ -100,6 +117,34 @@ public class Auction {
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+    }
+
+    public Double getInitialPrice() {
+        return initialPrice;
+    }
+
+    public void setInitialPrice(Double initialPrice) {
+        this.initialPrice = initialPrice;
+    }
+
+    public Double getCurrentPrice() {
+        return currentPrice;
+    }
+
+    public void setCurrentPrice(Double currentPrice) {
+        this.currentPrice = currentPrice;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public LocalDateTime getPriceUpdatedAt() {
+        return priceUpdatedAt;
+    }
+
+    public void setPriceUpdatedAt(LocalDateTime priceUpdatedAt) {
+        this.priceUpdatedAt = priceUpdatedAt;
     }
 
     public AuctionTypeEnum getType() {
@@ -156,5 +201,13 @@ public class Auction {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public Bidder getHighestBidder() {
+        return highestBidder;
+    }
+
+    public void setHighestBidder(Bidder highestBidder) {
+        this.highestBidder = highestBidder;
     }
 }
