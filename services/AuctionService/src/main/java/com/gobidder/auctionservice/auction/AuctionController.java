@@ -1,7 +1,10 @@
-package com.gobidder.auctionservice;
+package com.gobidder.auctionservice.auction;
 
+import com.gobidder.auctionservice.auction.dto.AuctionCreateRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/auction")
@@ -15,8 +18,8 @@ public class AuctionController {
     }
 
     @PostMapping("/auction")
-    public Auction createExample(@RequestBody String name, @RequestBody String startTime, @RequestBody String endTime) {
-        return this.auctionService.create(name, startTime, endTime);
+    public Auction createExample(@RequestBody AuctionCreateRequestDto auctionCreateRequestDto) {
+        return this.auctionService.create(auctionCreateRequestDto);
     }
 
     @GetMapping("/auction/{id}")

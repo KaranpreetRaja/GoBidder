@@ -1,10 +1,10 @@
-package com.gobidder.auctionservice;
+package com.gobidder.auctionservice.auction.dto;
 
-public class currentHighest {
+public class CurrentHighestBidderDto {
     private int userID;
     private int bid;
 
-    public currentHighest(int userID, int bid) {
+    public CurrentHighestBidderDto(int userID, int bid) {
         this.userID = userID;
         this.bid = bid;
     }
