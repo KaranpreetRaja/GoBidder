@@ -18,15 +18,30 @@ export function login(
     dispatch: React.Dispatch<AuthAction>
 ) {
     console.log(email);
-    // ==================================
-    // TODO: Get user data from API call.
-    // ----------------------------------
+
     const user = new User("Name", email);
-    // ==================================
 
     dispatch({
         user: user,
         token: "TOKEN FROM API CALL",
         type: AuthActionEnum.LOGIN_SUCCESS
     });
+}
+
+export function getAuthToken(): string | null {
+    const now = Date.now();
+
+    const localToken = localStorage.getItem("authToken");
+    const localExpiry = localStorage.getItem("tokenExpiry");
+    if (localToken && localExpiry && parseInt(localExpiry, 10) > now) {
+        return localToken;
+    }
+
+    const sessionToken = sessionStorage.getItem("authToken");
+    const sessionExpiry = sessionStorage.getItem("tokenExpiry");
+    if (sessionToken && sessionExpiry && parseInt(sessionExpiry, 10) > now) {
+        return sessionToken;
+    }
+
+    return null;
 }
