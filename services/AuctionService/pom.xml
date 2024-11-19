@@ -6,13 +6,13 @@
 		<groupId>com.gobidder</groupId>
 		<artifactId>parent-pom</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<groupId>com.gobidder</groupId>
-	<artifactId>auth</artifactId>
+	<artifactId>auctionservice</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>auth</name>
-	<description>Authentication microservice for the GoBidder auction platform.</description>
+	<name>auctionservice</name>
+	<description>Auction Service</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -36,15 +36,24 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- H2 in-memory database for testing -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- SQLite JDBC Driver -->
@@ -58,29 +67,6 @@
 			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-community-dialects</artifactId>
 			<version>6.2.1.Final</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<!-- JWT library -->
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-api</artifactId>
-			<version>0.11.5</version>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-impl</artifactId>
-			<version>0.11.5</version>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-jackson</artifactId>
-			<version>0.11.5</version>
 		</dependency>
 	</dependencies>
 
