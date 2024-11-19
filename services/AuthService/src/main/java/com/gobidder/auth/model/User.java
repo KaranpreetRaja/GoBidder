@@ -27,6 +27,9 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Embedded
+    private PaymentInfo paymentInfo;
+
     @CreationTimestamp
     @Column(updatable = false, name = "created_at")
     private Date createdAt;
@@ -49,6 +52,10 @@ public class User implements UserDetails {
         return email;
     }
 
+    public String getFullName() {
+        return fullName;
+    }
+
     public User setFullName(String fullName) {
         this.fullName = fullName;
         return this;
@@ -62,5 +69,14 @@ public class User implements UserDetails {
     public User setPassword(String password) {
         this.password = password;
         return this;
+    }
+
+    public User setPaymentInfo(PaymentInfo paymentInfo) {
+        this.paymentInfo = paymentInfo;
+        return this;
+    }
+
+    public PaymentInfo getPaymentInfo() {
+        return paymentInfo;
     }
 }
