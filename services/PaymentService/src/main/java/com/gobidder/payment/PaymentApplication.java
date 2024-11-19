@@ -1,11 +1,13 @@
-package com.gobidder.auth;
+package com.gobidder.payment;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AuthApplication {
+public class PaymentApplication {
+
 	public static void main(String[] args) {
-		SpringApplication.run(AuthApplication.class, args);
+		SpringApplication.run(PaymentApplication.class, args);
 	}
+
 }

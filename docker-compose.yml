@@ -1,5 +1,5 @@
 services:
-  auth_service:
+  auth-service:
     build:
       context: ./services
       dockerfile: AuthService/Dockerfile
@@ -19,7 +19,15 @@ services:
       - auth-data:/app/data
     networks:
       - microservices-network
-  reverse_proxy:
+  payment-service:
+    build:
+      context: ./services/PaymentService
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    networks:
+      - microservices-network
+  reverse-proxy:
     build:
       context: ./services/ReverseProxy
       dockerfile: Dockerfile
