@@ -2,15 +2,19 @@ package com.gobidder.bid_service.service;
 
 import com.gobidder.bid_service.model.AuctionCacheModel;
 import com.gobidder.bid_service.repository.AuctionCacheRepository;
+import com.gobidder.bid_service.proto.AuctionServiceGrpc;
+import com.gobidder.bid_service.proto.GetAuctionRequest;
+import com.gobidder.bid_service.proto.GetAuctionResponse;
+import com.gobidder.bid_service.proto.InitAuctionRequest;
+import com.gobidder.bid_service.proto.InitAuctionResponse;
 import io.grpc.stub.StreamObserver;
-
 import lombok.RequiredArgsConstructor;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.stereotype.Service;
 
 @GrpcService
 @RequiredArgsConstructor
-public class AuctionGrpcServer extends AuctionServiceImplBase {
+public class AuctionGrpcServer extends AuctionServiceGrpc.AuctionServiceImplBase {
     private final AuctionCacheRepository auctionCacheRepository;
 
     @Override
