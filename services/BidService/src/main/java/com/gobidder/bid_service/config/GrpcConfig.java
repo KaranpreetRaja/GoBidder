@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 public class GrpcConfig {
-    @Value("{grpc.auction.host:auction-service}")
+    @Value("${grpc.auction.host:auction-service}")
     private String host;
 
     @Value("${grpc.auction.port:9090}")
