@@ -5,14 +5,17 @@ FROM maven:3.8.3-openjdk-17 AS build-stage
 # Set working directory
 WORKDIR /app
 
-# Copy pom.xml
-COPY pom.xml .
+# Copy parent pom.xml
+COPY pom.xml /
+
+# Copy payment service pom.xml
+COPY PaymentService/pom.xml .
 
 # Install dependencies
 RUN mvn dependency:resolve -U
 
 # Copy source files
-COPY src ./src
+COPY PaymentService/src ./src
 
 # Build project with Maven
 RUN mvn package -DskipTests
@@ -31,7 +34,7 @@ RUN mkdir data
 COPY --from=build-stage /app/target/*.jar app.jar
 
 # Expose the port for the server to run on
-EXPOSE 8081
+EXPOSE 8082
 
 # Run the Spring Boot application
 ENTRYPOINT ["java", "-jar", "app.jar"]

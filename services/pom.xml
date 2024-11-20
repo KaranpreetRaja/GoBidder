@@ -16,6 +16,7 @@
     <modules>
         <module>AuthService</module>
         <module>AuctionService</module>
+        <module>PaymentService</module>
     </modules>
 
     <properties>
