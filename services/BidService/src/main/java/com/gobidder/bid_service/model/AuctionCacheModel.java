@@ -1,9 +1,11 @@
 package com.gobidder.bid_service.model;
-import jakarta.persistence.Id;
+
+import org.springframework.data.annotation.Id;
 import lombok.Data;
+import org.springframework.data.redis.core.RedisHash;
 
 @Data
-@RedishHash("AuctionCache")
+@RedisHash("AuctionCache")
 public class AuctionCacheModel {
     @Id
     private String auctionId;
