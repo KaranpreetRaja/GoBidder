@@ -8,30 +8,25 @@ import com.gobidder.bid_service.service.KafkaProducerService;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class DutchAuctionStrategy implements AuctionStrategy {
+public class ForwardAuctionStrategy implements AuctionStrategy {
     private final AuctionCacheRepository auctionCacheRepository;
     private final KafkaProducerService kafkaProducerService;
 
     @Override
     public boolean isBidPossible(AuctionCacheModel auctionModel, BidRequest bidRequest) {
-        return bidRequest.getPrice().equals(auctionModel.getCurrentPrice()) &&
-                auctionModel.isActive() &&
-                auctionModel.getCurrentWinningBidderId() == null;
+        return bidRequest.getPrice() > auctionModel.getCurrentPrice() &&
+                !bidRequest.getUserId().equals(auctionModel.getCurrentWinningBidderId()) &&
+                auctionModel.isActive();
     }
 
     @Override
     public BidResponse publishBid(AuctionCacheModel auctionModel, BidRequest bidRequest) {
         try {
-            // For Dutch auction, first bid at the current price wins
-            if (auctionModel.getCurrentWinningBidderId() != null) {
-                return createErrorResponse("Auction already has a winning bid");
-            }
-
-            // Update auction cache with winning bid
+            // Update auction cache with new bid
+            auctionModel.setCurrentPrice(bidRequest.getPrice());
             auctionModel.setCurrentWinningBidderId(bidRequest.getUserId());
             auctionModel.setLastUpdateTimestamp(System.currentTimeMillis());
             auctionModel.setTotalAuctionBids(auctionModel.getTotalAuctionBids() + 1);
-            auctionModel.setActive(false); // Dutch auction ends with first valid bid
 
             // Save updated auction cache
             auctionCacheRepository.save(auctionModel);
@@ -54,7 +49,7 @@ public class DutchAuctionStrategy implements AuctionStrategy {
     private BidResponse createSuccessResponse() {
         BidResponse response = new BidResponse();
         response.setStatus("SUCCESS");
-        response.setMessage("Bid successfully placed. You have won the Dutch auction!");
+        response.setMessage("Bid successfully placed");
         return response;
     }
 

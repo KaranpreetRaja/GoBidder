@@ -1,31 +1,33 @@
 package com.gobidder.bid_service.service.strategy;
 
-import com.gobidder.bid_service.dto.BidRequest;
-import com.gobidder.bid_service.dto.BidResponse;
-import com.gobidder.bid_service.model.AuctionCacheModel;
+import com.gobidder.bid_service.repository.AuctionCacheRepository;
+import com.gobidder.bid_service.service.KafkaProducerService;
+import org.springframework.stereotype.Component;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
+@Component
+public class AuctionStrategyFactory {
+    private final AuctionCacheRepository auctionCacheRepository;
+    private final KafkaProducerService kafkaProducerService;
+    private final ForwardAuctionStrategy forwardAuctionStrategy;
+    private final DutchAuctionStrategy dutchAuctionStrategy;
 
-public class AuctionStrategyFactory{
-    private static final AuctionStrategyFactory INSTANCE = new AuctionStrategyFactory();
-
-    private static final Map<String, AuctionStrategy> strategies = new ConcurrentHashMap<String, AuctionStrategy>();
-
-    private AuctionStrategyFactory() {
-        strategies.put("Forward", ForwardAuctionStrategy.getInstance());
-        strategies.put("Dutch", DutchAuctionStrategy.getInstance());
+    public AuctionStrategyFactory(AuctionCacheRepository auctionCacheRepository,
+                                  KafkaProducerService kafkaProducerService) {
+        this.auctionCacheRepository = auctionCacheRepository;
+        this.kafkaProducerService = kafkaProducerService;
+        this.forwardAuctionStrategy = new ForwardAuctionStrategy(auctionCacheRepository, kafkaProducerService);
+        this.dutchAuctionStrategy = new DutchAuctionStrategy(auctionCacheRepository, kafkaProducerService);
     }
 
-    public static AuctionStrategyFactory getInstance() {
-        return INSTANCE;
-    }
-
-    public static AuctionStrategy getStrategy(String strategyName) {
-        AuctionStrategy strategy = strategies.get(strategyName.toUpperCase());
-        if (strategy == null) {
-            throw new IllegalArgumentException("Unknown strategy: " + strategyName);
+    public AuctionStrategy getStrategy(String strategyName) {
+        if (strategyName == null) {
+            throw new IllegalArgumentException("Strategy name cannot be null");
         }
-        return strategy;
+
+        return switch (strategyName.toUpperCase()) {
+            case "FORWARD" -> forwardAuctionStrategy;
+            case "DUTCH" -> dutchAuctionStrategy;
+            default -> throw new IllegalArgumentException("Unknown strategy: " + strategyName);
+        };
     }
 }
