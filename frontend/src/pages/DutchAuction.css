@@ -1,4 +1,4 @@
-.forwardAuction-container {
+.dutchAuction-container {
     max-width: 600px;
     margin: 50px auto;
     padding: 20px;
@@ -29,7 +29,7 @@ h2 {
     text-align: center;
 }
 
-.highest-bid {
+.current-price {
     font-size: 20px;
     font-weight: bold;
     color: #28a745;

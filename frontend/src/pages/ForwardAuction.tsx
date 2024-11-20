@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import "./auction.css";
+import "./ForwardAuction.css";
 
 interface ForwardAuctionItem {
     name: string;
     timeLeft: number;
-    currentBid: number;
+    highestBid: number;
 }
 
 const Auction: React.FC = () => {
@@ -47,7 +47,7 @@ const Auction: React.FC = () => {
                 Time Left: {formatTimeLeft(ForwardAuctionItem.timeLeft)}
             </div>
             <div className="highest-bid">
-                Highest Bid: ${ForwardAuctionItem.currentBid.toFixed(2)}
+                Highest Bid: ${ForwardAuctionItem.highestBid.toFixed(2)}
             </div>
             {error && <div className="error-message">{error}</div>}
             <div className="form-group">
@@ -58,12 +58,12 @@ const Auction: React.FC = () => {
                     type="number"
                     value={newBid}
                     onChange={(e) => setNewBid(e.target.value)}
-                    min={auctionItem.currentBid+1}
-                    placeholder={'Your bid must be higher than: $${ForwardAuctionItem.currentBid}'}
+                    min={auctionItem.highestBid+1}
+                    placeholder={'Your bid must be higher than: $${ForwardAuctionItem.highestBid}'}
                 />
             </div>
             <button
-                className="place-bid-button"
+                className="bid-button"
                 onClick={handlePlaceBid}
                 disabled={loading || ForwardAuctionItem.timeLeft === 0}
             >
