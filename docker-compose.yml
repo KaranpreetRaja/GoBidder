@@ -1,18 +1,35 @@
 services:
-  auth_service:
+  auth-service:
     build:
-      context: ./services/AuthService
-      dockerfile: Dockerfile
+      context: ./services
+      dockerfile: AuthService/Dockerfile
     ports:
       - "8081:8081"
     volumes:
       - auth-data:/app/data
     networks:
       - microservices-network
-    depends_on:
-      - kafka
 
-  reverse_proxy:
+  auction-service:
+    build:
+      context: ./services
+      dockerfile: AuctionService/Dockerfile
+    ports:
+      - "8083:8083"
+    volumes:
+      - auth-data:/app/data
+    networks:
+      - microservices-network
+  payment-service:
+    build:
+      context: ./services/PaymentService
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    networks:
+      - microservices-network
+      
+  reverse-proxy:
     build:
       context: ./services/ReverseProxy
       dockerfile: Dockerfile
