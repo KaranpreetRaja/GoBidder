@@ -5,14 +5,17 @@ FROM maven:3.8.3-openjdk-17 AS build-stage
 # Set working directory
 WORKDIR /app
 
-# Copy pom.xml
-COPY pom.xml .
+# Copy parent pom.xml
+COPY pom.xml /
 
-# Install dependencies
-RUN mvn dependency:resolve -U
+# Copy auth service pom.xml
+COPY AuthService/pom.xml .
+
+# Clean outputs
+RUN mvn clean
 
 # Copy source files
-COPY src ./src
+COPY AuthService/src ./src
 
 # Build project with Maven
 RUN mvn package -DskipTests
