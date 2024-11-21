@@ -1,0 +1,57 @@
+<!-- templates/create_auction.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2 class="text-center mb-4">Create New Auction</h2>
+        <form method="POST">
+            <div class="mb-3">
+                <label for="name" class="form-label">Auction Name</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="type" class="form-label">Auction Type</label>
+                <select class="form-select" id="type" name="type" required>
+                    <option value="DUTCH">Dutch Auction</option>
+                    <option value="FORWARD">Forward Auction</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="initialPrice" class="form-label">Initial Price</label>
+                <input type="number" class="form-control" id="initialPrice" name="initialPrice" 
+                       min="0" step="0.01" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="minimumPrice" class="form-label">Minimum Price</label>
+                <input type="number" class="form-control" id="minimumPrice" name="minimumPrice" 
+                       min="0" step="0.01" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="startTime" class="form-label">Start Time</label>
+                <input type="datetime-local" class="form-control" id="startTime" name="startTime" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="duration" class="form-label">Duration (minutes)</label>
+                <input type="number" class="form-control" id="duration" name="duration" 
+                       min="1" required>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Create Auction</button>
+                <a href="{{ url_for('auctions') }}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

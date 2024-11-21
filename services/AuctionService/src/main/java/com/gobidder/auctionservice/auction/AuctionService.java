@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 @Service
 public class AuctionService {
@@ -71,6 +72,17 @@ public class AuctionService {
     }
 
     /**
+     * Deletes an auction from the database.
+     * 
+     * @param id The ID of the auction to delete
+     */
+    public void delete(Long id) {
+        // Verify auction exists before deleting
+        this.assertAuctionExists(id);
+        this.auctionRepository.delete(id);
+    }
+
+    /**
      * Get an auction from the database by its ID.
      * <p>
      * This method is synchronized to prevent dirty reads.
@@ -84,6 +96,15 @@ public class AuctionService {
      */
     public Auction get(Long id) {
         return this.auctionRepository.findById(id);
+    }
+
+    /**
+     * Get all auctions from the database.
+     * 
+     * @return List of all auctions
+     */
+    public List<Auction> getAllAuctions() {
+        return this.auctionRepository.findAll();
     }
 
     /**

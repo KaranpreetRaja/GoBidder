@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.slf4j.Logger;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class AuctionJpaRepositoryAdapter implements AuctionRepository {
     private final AuctionJpaRepository repository;
@@ -24,8 +25,17 @@ public class AuctionJpaRepositoryAdapter implements AuctionRepository {
     }
     @Override
     public Auction create(Auction auction) {
-
         return this.repository.save(auction);
+    }
+
+    @Override
+    public void delete(Long id) {
+        this.repository.deleteById(id);
+    }
+
+    @Override
+    public List<Auction> findAll() {
+        return this.repository.findAll();
     }
 
     @Override
