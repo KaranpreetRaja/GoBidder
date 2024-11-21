@@ -5,70 +5,92 @@ interface DutchAuctionItem {
     name: string;
     timeLeft: number;
     currentPrice: number;
-    decrementPrice: number; // This is the amount the price will be lowered by
+    status: string;
+    initialPrice: number;
+    minimumPrice: number;
 }
 
 const Auction: React.FC = () => {
     const [auctionItem, setAuctionItem] = useState<DutchAuctionItem>({
-        // This is where the logic for getting the Java auction information is
-
+        name: "",
+        timeLeft: 0,
+        currentPrice: 0,
+        status: "",
+        initialPrice: 0,
+        minimumPrice: 0
     });
 
-    const [newBid, setNewBid] = useState<number | string>("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
+    const [timerId, setTimerId] = useState<number | null>(null);
 
+    // Fetch auction data initially and set up polling
     useEffect(() => {
-        const timer = setInterval(() => {
-           setDutchAuctionItem((prev) => {
-               if (prev.timeLeft > 0) {
-                   return { ...prev, timeLeft: prev.timeLeft-1 };
-               }
-               else {
-                   clearInterval(timer);
-                   return prev;
-               }
-           });
-        }, 1000);
-        return () => clearInterval(timer);
+        const fetchAuctionData = async () => {
+            try {
+                const response = await fetch('http://localhost:8083/auction/1');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch auction data');
+                }
+                const data = await response.json();
+                
+                setAuctionItem({
+                    name: data.name,
+                    timeLeft: calculateTimeLeft(data.startTime),
+                    currentPrice: data.currentPrice,
+                    status: data.status,
+                    initialPrice: data.initialPrice,
+                    minimumPrice: data.minimumPrice
+                });
+            } catch (err) {
+                setError("Failed to load auction data");
+            }
+        };
+
+        fetchAuctionData();
+        // Poll for updates every 5 seconds
+        const pollInterval = setInterval(fetchAuctionData, 5000);
+        
+        return () => clearInterval(pollInterval);
     }, []);
 
-    useEffect(() => {
-        if (DutchAuctionItem.timeLeft > 0 && !timerId) {
-            const id = setInterval(() => {
-                setDutchAuctionItem((prev) => ({
-                    ...prev,
-                    currentPrice: prev.currentPrice - decrementPrice,
-                }));
-            }, incrementInterval * 1000);
-            setTimerId(id);
-        }
+    const calculateTimeLeft = (startTime: string) => {
+        const start = new Date(startTime).getTime();
+        const now = new Date().getTime();
+        return Math.max(0, Math.floor((start - now) / 1000));
+    };
 
-        return () => {
-            if (timerId) clearInterval(timerId);
-        };
-    }, [DutchAuctionItem.timeLeft, timerId]);
-
-    const purchase = () => {
+    const purchase = async () => {
         try {
             setLoading(true);
             setError(null);
 
-            setTimeout(() => {
-                setDutchAuctionItem((prev) => ({
-                   ...prev,
-                   timeLeft: 0,
-                }));
+            const response = await fetch(`http://localhost:8083/auction/1/bid`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: 1,
+                    bid: auctionItem.currentPrice
+                })
+            });
 
-                if (timerId) {
-                    clearInterval(timerId);
-                    // Stops decrementer
-                }
-            setTimerId(null);
-            setLoading(false);
-            }, 500);
-        } catch {
-            setError("Error buying item.");
+            if (!response.ok) {
+                throw new Error('Failed to place bid');
+            }
+
+            // Update auction state after successful bid
+            const updatedAuction = await response.json();
+            setAuctionItem(prev => ({
+                ...prev,
+                status: updatedAuction.status,
+                currentPrice: updatedAuction.currentPrice
+            }));
+
+        } catch (err) {
+            setError("Error placing bid");
+        } finally {
             setLoading(false);
         }
     };
@@ -77,28 +99,29 @@ const Auction: React.FC = () => {
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
-        return '${hours}h ${minutes}m ${secs}s';
+        return `${hours}h ${minutes}m ${secs}s`;
     };
 
     return (
         <div className="dutchAuction-container">
             <h2>Auction</h2>
-            <div className="item-name">{DutchAuctionItem.name}</div>
+            <div className="item-name">{auctionItem.name}</div>
             <div className="time-left">
-                Time Left: {formatTimeLeft(DutchAuctionItem.timeLeft)}
+                Time Left: {formatTimeLeft(auctionItem.timeLeft)}
             </div>
             <div className="current-price">
-                Current Price: ${DutchAuctionItem.currentPrice.toFixed(2)}
+                Current Price: ${auctionItem.currentPrice.toFixed(2)}
             </div>
             {error && <div className="error-message">{error}</div>}
             <button
                 className="bid-button"
                 onClick={purchase}
-                disabled={loading || auctionItem.timeLeft === 0}
+                disabled={loading || auctionItem.status !== 'ACTIVE'}
             >
                 {loading ? "Finalizing..." : "Place Bid"}
             </button>
         </div>
-
     );
 };
+
+export default Auction;

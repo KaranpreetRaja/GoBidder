@@ -24,13 +24,13 @@ const AuctionList: React.FC = () => {
         };
 
         fetchAuctionItems();
-    },[]);
+    }, []);
 
     const formatTimeLeft = (seconds: number) => {
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            const secs = seconds % 60;
-            return '${hours}h ${minutes}m ${secs}s';
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${hours}h ${minutes}m ${secs}s`;
     };
 
     return (
@@ -39,10 +39,10 @@ const AuctionList: React.FC = () => {
             <div className="auction-grid">
                 {auctionItems.map((item) => (
                     <Link
-                        to={'/auction/${item.id}'}
+                        to={`/auction/${item.id}`}
                         className="auction-card"
                         key={item.id}
-
+                    >
                         <h2>{item.name}</h2>
                         <p>Highest Bid/Current Price: ${item.highestBid.toFixed(2)}</p>
                         <p>Time Left: {formatTimeLeft(item.timeLeft)}</p>
