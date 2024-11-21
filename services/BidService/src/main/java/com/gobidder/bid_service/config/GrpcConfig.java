@@ -8,14 +8,16 @@ import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 public class GrpcConfig {
-    @Value("${grpc.auction.host:auction-service}")
+    @Value("${grpc.auction.host}")
     private String host;
 
-    @Value("${grpc.auction.port:9090}")
+    @Value("${grpc.auction.port}")
     private int port;
 
     @Bean
     public ManagedChannel managedChannel() {
-        return ManagedChannelBuilder.forAddress("bid-service", 9090).usePlaintext().build();
+        return ManagedChannelBuilder.forAddress(host, port)
+                .usePlaintext()
+                .build();
     }
 }

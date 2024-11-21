@@ -31,7 +31,7 @@ RUN mkdir data
 COPY --from=build-stage /app/target/*.jar app.jar
 
 # Expose the port for the server to run on
-EXPOSE 8081
+EXPOSE 8084
 
 # Run the Spring Boot application
 ENTRYPOINT ["java", "-jar", "app.jar"]
