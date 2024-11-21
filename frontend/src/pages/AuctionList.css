@@ -1,0 +1,40 @@
+.auction-list-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.auction-list-container h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.auction-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.auction-card {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    text-decoration: none;
+    color: #333;
+}
+
+.auction-card h2 {
+    font-size: 2 rem;
+    margin: 0 0 10px;
+    color: #007bff;
+}
+
+.auction-card p {
+    margin: 5px 0;
+    font-size: 1rem;
+    color: #555;
+}

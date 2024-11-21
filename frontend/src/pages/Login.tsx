@@ -1,16 +1,16 @@
 import React, { useState } from "react";
+import { useEffect } from 'react';
 import { useAuthDispatch, login } from "src/context/auth";
+import { useNavigate } from "react-router-dom";
 import { AuthActionEnum } from "src/context/auth/auth_reducer";
+import { useAuthState } from '../context/auth/auth_context';
 import "./Login.css";
 
 const Login: React.FC = () => {
     const [isSignUp, setIsSignUp] = useState<boolean>(false);
-
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
-
     const [rememberMe, setRememberMe] = useState<boolean>(false);
-
     const [signUpData, setSignUpData] = useState({
         email: "",
         password: "",
@@ -21,7 +21,15 @@ const Login: React.FC = () => {
         billingAddress: "",
     });
 
+    const authState = useAuthState();
     const dispatch = useAuthDispatch();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (authState.loggedIn) {
+            navigate('/auction-list');
+        }
+    }, [authState.loggedIn, navigate]);
 
     const handleLoginSubmit: React.FormEventHandler<HTMLFormElement> = async (event) => {
         event.preventDefault();
@@ -77,8 +85,8 @@ const Login: React.FC = () => {
             });
 
             login(email, password, dispatch);
-
             console.log(`Token expires in: ${expiresIn}ms`);
+            
         } catch (err) {
             setError("An unexpected error occurred. Please try again.");
         } finally {
