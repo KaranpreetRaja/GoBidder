@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuthDispatch, login } from "src/context/auth";
+import { useNavigate } from "react-router-dom";
 import { AuthActionEnum } from "src/context/auth/auth_reducer";
 import "./Login.css";
 
@@ -8,6 +9,7 @@ const Login: React.FC = () => {
 
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
+    const navigate = useNavigate();
 
     const [rememberMe, setRememberMe] = useState<boolean>(false);
 
@@ -77,6 +79,7 @@ const Login: React.FC = () => {
             });
 
             login(email, password, dispatch);
+            navigate('/auction-list');
 
             console.log(`Token expires in: ${expiresIn}ms`);
         } catch (err) {
