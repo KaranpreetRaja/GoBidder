@@ -1,0 +1,38 @@
+syntax = "proto3";
+package proto;
+
+option java_package = "com.gobidder.auctionservice.proto";
+option java_multiple_files = true;
+
+service AuctionService {
+  rpc GetAuction (GetAuctionRequest) returns (GetAuctionResponse) {}
+  rpc InitAuction (InitAuctionRequest) returns (InitAuctionResponse) {}
+}
+
+message GetAuctionRequest {
+  string auction_id = 1;
+}
+
+message GetAuctionResponse {
+  string auction_id = 1;
+  string auction_type = 2;
+  double current_price = 3;
+  bool is_active = 4;
+  string current_winning_bidder_id = 5;
+  int64 last_update_timestamp = 6;
+  int32 total_auction_bids = 7;
+}
+
+message InitAuctionRequest {
+  string auction_id = 1;
+  string auction_type = 2;
+  double starting_price = 3;
+  int64 end_time_unix = 4;                // UNIX time in seconds (forward auctions only)
+  double dutch_auction_step_size = 5;     // Price to decrease for every interval
+  double dutch_auction_minimum_price = 6; // Go below this price -> end
+}
+
+message InitAuctionResponse {
+  bool success = 1;
+  string message = 2;
+}

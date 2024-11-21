@@ -62,6 +62,7 @@ public class AuctionGrpcClient {
                         .build();
 
                 try {
+                    log.info("Bid Service: Auction GRPC Client: Attempting to get auction");
                     return blockingStub.getAuction(request);
                 } catch (Exception e) {
                     log.error("Bid Service: Auction GRPC Client: Error getting auction details for auctionId: {} ", auctionId, e);

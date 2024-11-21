@@ -16,6 +16,18 @@ services:
       dockerfile: AuctionService/Dockerfile
     ports:
       - "8083:8083"
+      - "9090:9090"
+    environment:
+      - GRPC_AUCTION_HOST=auction-service 
+      - GRPC_AUCTION_PORT=9090
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      # Add more explicit Kafka configurations
+      - SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL=PLAINTEXT
+      - SPRING_KAFKA_PROPERTIES_SASL_MECHANISM=PLAINTEXT
+    depends_on:
+      - redis
+      - kafka
     volumes:
       - auth-data:/app/data
     networks:
