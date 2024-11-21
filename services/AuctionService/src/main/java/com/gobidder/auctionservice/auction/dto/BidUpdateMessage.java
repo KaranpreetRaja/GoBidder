@@ -7,6 +7,8 @@ public class BidUpdateMessage {
     private Long timestamp;
     private int totalAuctionBids;
 
+    public BidUpdateMessage() {}
+
     public BidUpdateMessage(String auctionId, Double newAmount, String bidderId, Long timestamp, int totalAuctionBids) {
         this.auctionId = auctionId;
         this.newAmount = newAmount;
