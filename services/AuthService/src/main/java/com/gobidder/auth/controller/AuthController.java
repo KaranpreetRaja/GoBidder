@@ -6,11 +6,11 @@ import com.gobidder.auth.dtos.RegisterDto;
 import com.gobidder.auth.response.LoginResponse;
 import com.gobidder.auth.service.AuthService;
 import com.gobidder.auth.service.JwtService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/auth")
 @RestController
@@ -42,5 +42,20 @@ public class AuthController {
                 .setExpiresIn(jwtService.getExpirationTime());
 
         return ResponseEntity.ok(loginResponse);
+    }
+    private Logger logger = LoggerFactory.getLogger(AuthController.class);
+    @RequestMapping(
+        value = "",
+        method = {
+            RequestMethod.GET,
+            RequestMethod.POST,
+            RequestMethod.PUT,
+            RequestMethod.DELETE,
+            RequestMethod.PATCH
+        }
+    )
+    @ResponseStatus(value = HttpStatus.NO_CONTENT)
+    public void proxyAuthenticate() {
+        logger.info("proxyAuthenticate");
     }
 }

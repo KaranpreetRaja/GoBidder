@@ -29,10 +29,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    @SuppressWarnings("removal") // Suppress deprecated warnings for now
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf()
                 .disable().authorizeHttpRequests()
-                .requestMatchers("/auth/**")
+                .requestMatchers("/auth/login", "/auth/signup")
                 .permitAll()
                 .anyRequest()
                 .authenticated()
