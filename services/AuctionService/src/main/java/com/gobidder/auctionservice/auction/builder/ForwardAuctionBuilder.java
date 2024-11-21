@@ -48,7 +48,8 @@ public class ForwardAuctionBuilder extends AuctionBuilder {
             AuctionStatusEnum.NOT_STARTED,
             this.startTime,
             this.duration,
-            null // No minimum price for forward auctions
+            null, // No minimum price for forward auctions
+            0 // No bids yet
         );
     }
 }

@@ -25,6 +25,7 @@ public class Auction {
     private Integer duration;
     private Double minimumPrice;
     private LocalDateTime priceUpdatedAt;
+    private Integer totalBids;
     @OneToOne
     @JoinColumn(name="bidderId", referencedColumnName = "id")
     @JsonBackReference
@@ -47,7 +48,8 @@ public class Auction {
         AuctionStatusEnum status,
         LocalDateTime startTime,
         Integer duration,
-        Double minimumPrice
+        Double minimumPrice,
+        Integer totalBids
     ) {
         this.name = name;
         this.description = description;
@@ -63,6 +65,7 @@ public class Auction {
         this.duration = duration;
         this.priceUpdatedAt = startTime;
         this.minimumPrice = minimumPrice;
+        this.totalBids = totalBids;
     }
 
     public Auction(
@@ -79,7 +82,8 @@ public class Auction {
         AuctionStatusEnum status,
         LocalDateTime startTime,
         Integer duration,
-        Double minimumPrice
+        Double minimumPrice,
+        Integer totalBids
     ) {
         this.id = id;
         this.name = name;
@@ -96,6 +100,7 @@ public class Auction {
         this.duration = duration;
         this.priceUpdatedAt = startTime;
         this.minimumPrice = minimumPrice;
+        this.totalBids = totalBids;
     }
 
     public Long getId() {
@@ -216,6 +221,14 @@ public class Auction {
 
     public void setMinimumPrice(Double minimumPrice) {
         this.minimumPrice = minimumPrice;
+    }
+
+    public Integer getTotalBids() {
+        return totalBids;
+    }
+
+    public void setTotalBids(Integer totalBids) {
+        this.totalBids = totalBids;
     }
 
     public Bidder getHighestBidder() {
