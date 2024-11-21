@@ -47,7 +47,8 @@ public class DutchAuctionBuilder extends AuctionBuilder {
             AuctionStatusEnum.NOT_STARTED,
             this.startTime,
             null, // No duration for Dutch auctions
-            this.minimumPrice
+            this.minimumPrice,
+            0 // No bids yet
         );
     }
 }

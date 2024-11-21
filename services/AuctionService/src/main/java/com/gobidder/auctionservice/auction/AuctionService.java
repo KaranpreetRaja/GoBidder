@@ -2,6 +2,9 @@ package com.gobidder.auctionservice.auction;
 
 import com.gobidder.auctionservice.auction.builder.AuctionBuilder;
 import com.gobidder.auctionservice.auction.dto.AuctionCreateRequestDto;
+import com.gobidder.auctionservice.auction.dto.BidUpdateMessage;
+import com.gobidder.auctionservice.auction.repository.AuctionJpaRepository;
+import com.gobidder.auctionservice.auction.repository.AuctionRepository;
 import com.gobidder.auctionservice.auction.strategy.AuctionStrategy;
 import com.gobidder.auctionservice.auction.strategy.factory.AuctionStrategyFactory;
 import com.gobidder.auctionservice.bidder.Bidder;
@@ -64,9 +67,7 @@ public class AuctionService {
             .initialPrice(auctionCreateRequestDto.getInitialPrice())
             .build();
 
-        auction = this.auctionRepository.save(auction);
-        // Return the newly created auction from the database
-        return auction;
+        return this.auctionRepository.create(auction);
     }
 
     /**
@@ -81,13 +82,8 @@ public class AuctionService {
      * @throws ResponseStatusException If the auction with the given ID does not
      *                                 exist in the database.
      */
-    public synchronized Auction get(Long id) {
-        return this.auctionRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Auction with id " + id + " not found"
-            )
-        );
+    public Auction get(Long id) {
+        return this.auctionRepository.findById(id);
     }
 
     /**
@@ -112,7 +108,7 @@ public class AuctionService {
      *
      * @return The auction from the database after starting.
      */
-    public synchronized Auction startAuction(Long auctionId) {
+    public Auction startAuction(Long auctionId) {
         Auction auction = this.get(auctionId);
         if (auction.getStatus().equals(AuctionStatusEnum.ACTIVE)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Auction already started");
@@ -123,7 +119,7 @@ public class AuctionService {
         }
         auction.setStartTime(LocalDateTime.now());
         auction.setStatus(AuctionStatusEnum.ACTIVE);
-        auction = this.auctionRepository.save(auction);
+        auction = this.auctionRepository.startAuction(auctionId, LocalDateTime.now());
 
         // Schedule auction task for the future
         if (auction.getType().equals(AuctionTypeEnum.FORWARD)) {
@@ -145,19 +141,20 @@ public class AuctionService {
      *
      * @throws ResponseStatusException If the auction is a forward auction.
      */
-    public synchronized void decreasePrice(Auction auction, double priceToDecrease) {
+    public void decreasePrice(Auction auction, double priceToDecrease) {
         if (auction.getType().equals(AuctionTypeEnum.FORWARD)) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
                 "Cannot decrease auction price when auction type is forward"
             );
         }
+        Double currentPrice;
         if (auction.getCurrentPrice() - priceToDecrease < 0) {
-            auction.setCurrentPrice(0.0);
+            currentPrice = 0.0;
         } else {
-            auction.setCurrentPrice(auction.getCurrentPrice() - priceToDecrease);
+            currentPrice = auction.getCurrentPrice() - priceToDecrease;
         }
-        this.auctionRepository.save(auction);
+        this.auctionRepository.updatePrice(auction.getId(), currentPrice);
     }
 
     /**
@@ -170,10 +167,10 @@ public class AuctionService {
      *
      * @return The auction from the database after updating.
      */
-    public synchronized Auction updateHighestBidder(Auction auction, Bidder bidder) {
+    public Auction updateHighestBidder(Auction auction, Bidder bidder) {
         auction.setCurrentPrice(bidder.getBidderPrice());
         auction.setHighestBidder(bidder);
-        return this.auctionRepository.save(auction);
+        return this.auctionRepository.updateHighestBidder(auction.getId(), auction.getHighestBidder());
     }
 
     /**
@@ -183,13 +180,18 @@ public class AuctionService {
      *
      * @param auction The auction to end.
      */
-    public synchronized void endAuction(Auction auction) {
+    public void endAuction(Auction auction) {
+        AuctionStatusEnum status;
         if (auction.getHighestBidder() == null) {
-            auction.setStatus(AuctionStatusEnum.CANCELLED);
+            status = AuctionStatusEnum.CANCELLED;
         } else {
-            auction.setStatus(AuctionStatusEnum.WON);
+            status = AuctionStatusEnum.WON;
         }
-        this.auctionRepository.save(auction);
+        this.auctionRepository.updateStatus(auction.getId(), status);
+    }
+
+    public Auction updateHighestBidder(Long auctionId, BidUpdateMessage message) {
+        return this.auctionRepository.updateHighestBidder(auctionId, message);
     }
 
     /**
