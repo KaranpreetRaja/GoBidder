@@ -50,7 +50,6 @@ public class DutchAuctionHighestBidderStrategy implements HighestBidderStrategy 
             bidder = new Bidder();
             bidder.setUserId(newHighestBidder.getUserId());
             bidder.setBidderPrice(newHighestBidder.getBid());
-            bidder.setAuction(auction);
 
             bidder = this.bidderRepository.save(bidder);
 

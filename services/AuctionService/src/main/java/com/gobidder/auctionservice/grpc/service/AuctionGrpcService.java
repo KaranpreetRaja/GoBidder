@@ -69,9 +69,9 @@ public class AuctionGrpcService extends AuctionServiceGrpc.AuctionServiceImplBas
             }
 
             // Set current winning bidder if exists
-            if (auction.getHighestBidder() != null && auction.getHighestBidder().getUserId() != null) {
+            if (auction.getHighestBidderId() != null) {
                 responseBuilder.setCurrentWinningBidderId(
-                        auction.getHighestBidder().getUserId().toString()
+                        auction.getHighestBidderId().toString()
                 );
             } else {
                 responseBuilder.setCurrentWinningBidderId("");
