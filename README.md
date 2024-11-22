@@ -1,28 +1,22 @@
-# GoBidder
-An open market auction website that facilitates conventional and Dutch auctions.
+<h1 align="center">
+  GoBidder
+</h1>
 
-## Project Structure
-```
-.
-├── frontend/                # React frontend application
-│   ├── app.py               # Flask app
-│   └── templates/           # Frontend templates
-├── services/                # Backend microservices
-│   ├── AuctionService/      # Handles auction operations
-│   ├── AuthService/         # User authentication
-|   ├── BidService/          # Handles bidding operations
-│   ├── PaymentService/      # Payment processing
-│   ├── Kafka/               # Message broker service
-│   └── ReverseProxy/        # Nginx reverse proxy
-└── docker-compose.yml  
-```
+<h4 align="center">An open market auction website that facilitates conventional and Dutch auctions.</h4>
 
+<p align="center">
+    <a href="#installation">Installation</a> •
+    <a href="#usage">Usage</a> •
+    <a href="#Project">Project</a> •
+    <a href="#contributors">Contributors</a>
+<br >
+
+# Installation
 ## Prerequisites
 - Docker and Docker Compose
 - Git (for cloning the repository)
 
-# Installation
-1. Install Docker
+## 1. Install Docker
 
 ```
 # Ubuntu/Debian
@@ -33,36 +27,21 @@ sudo apt-get install docker.io docker-compose
 Download and install Docker Desktop from https://www.docker.com/products/docker-desktop
 ```
 
-2. Clone the repository
+## 2. Clone the repository
 ```
 git clone https://github.com/KaranpreetRaja/GoBidder.git
 cd GoBidder
 ```
 
-3. Start the application
+## 3. Start the application
 ```
 docker compose up -d
 ```
 
-## Services and Ports
-- Frontend: http://localhost:3000
-- Auth Service: http://localhost:8081
-- Payment Service: http://localhost:8082
-- Auction Service: http://localhost:8083
-- Bid Service: http://localhost:8084
-- Reverse Proxy: http://localhost:8080
-- Kafka: http://localhost:9092
+# Usage
+### The application can be accessed at the following URL for local testing:
+## **http://localhost:3000**
 
-## Architecture
-The application consists of several microservices:
-
-- Auth Service: Handles user authentication and authorization
-- Payment Service: Processes payment transactions
-- Auction Service: Manages auction operations
-- Bid Service: Manages bidding operations
-- Reverse Proxy: Routes requests and handles CORS
-- Kafka: Message broker for inter-service communication
-- Frontend: User interface
 
 ## Development
 To run individual services:
@@ -93,3 +72,48 @@ cd frontend
 npm install
 npm run build
 ```
+
+
+# Project
+```
+.
+├── frontend/                # React frontend application
+│   ├── app.py               # Flask app
+│   └── templates/           # Frontend templates
+├── services/                # Backend microservices
+│   ├── AuctionService/      # Handles auction operations
+│   ├── AuthService/         # User authentication
+|   ├── BidService/          # Handles bidding operations
+│   ├── PaymentService/      # Payment processing
+│   ├── Kafka/               # Message broker service
+│   └── ReverseProxy/        # Nginx reverse proxy
+└── docker-compose.yml  
+```
+
+
+## Services and Ports
+- Frontend: http://localhost:3000
+- Auth Service: http://localhost:8081
+- Payment Service: http://localhost:8082
+- Auction Service: http://localhost:8083
+- Bid Service: http://localhost:8084
+- Reverse Proxy: http://localhost:8080
+- Kafka: http://localhost:9092
+
+## Architecture
+The application consists of several microservices:
+
+- Auth Service: Handles user authentication and authorization
+- Payment Service: Processes payment transactions
+- Auction Service: Manages auction operations
+- Bid Service: Manages bidding operations
+- Reverse Proxy: Routes requests and handles CORS
+- Kafka: Message broker for inter-service communication
+- Frontend: User interface
+
+
+# Contributors
+- [Karanpreet Raja](https://github.com/KaranpreetRaja)
+- [Mohammad Mahfooz](https://github.com/mahfoozm)
+- [Isaiah Gocool](https://github.com/goIsaiah)
+- [Daniel Di Giovanni](https://github.com/Danpythonman)
