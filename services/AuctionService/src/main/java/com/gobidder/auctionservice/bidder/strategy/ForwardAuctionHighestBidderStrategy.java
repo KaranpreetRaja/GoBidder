@@ -55,7 +55,7 @@ public class ForwardAuctionHighestBidderStrategy implements HighestBidderStrateg
             bidder = new Bidder();
             bidder.setUserId(newHighestBidder.getUserId());
             bidder.setBidderPrice(newHighestBidder.getBid());
-            bidder.setAuction(auction);
+
         }
         bidder = this.bidderRepository.save(bidder);
         this.auctionService.updateHighestBidder(auction, bidder);

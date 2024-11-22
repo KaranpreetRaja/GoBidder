@@ -63,7 +63,7 @@ public class AuctionJpaRepositoryAdapter implements AuctionRepository {
     @Override
     public Auction updateHighestBidder(Long auctionId, Bidder bidder) {
         Auction auction = this.findById(auctionId);
-        auction.setHighestBidder(bidder);
+        auction.setHighestBidder(bidder.getUserId(), bidder.getBidderPrice());
         auction.setCurrentPrice(bidder.getBidderPrice());
         auction.setTotalBids(auction.getTotalBids() + 1);
         return this.repository.save(auction);
@@ -82,21 +82,16 @@ public class AuctionJpaRepositoryAdapter implements AuctionRepository {
             Auction auction = this.findById(parsedAuctionId);
 
             // Create or update bidder
-            Bidder bidder = auction.getHighestBidder();
-            if (bidder == null) {
-                bidder = new Bidder();
-            }
+            Bidder bidder = new Bidder();
+            bidder.setUserId(parsedBidderId);
+            bidder.setBidderPrice(message.getNewAmount());
 
             // Set bidder details
             bidder.setUserId(parsedBidderId);
             bidder.setBidderPrice(message.getNewAmount());
-            bidder.setAuction(auction); // Set the relationship from both sides
 
-            // First save the bidder
-            bidder = bidderRepository.save(bidder);
-
-            // Then update and save the auction
-            auction.setHighestBidder(bidder);
+            // Update and save the auction
+            auction.setHighestBidder(bidder.getUserId(), bidder.getBidderPrice());
             auction.setTotalBids(auction.getTotalBids() + 1);
             auction.setCurrentPrice(message.getNewAmount());
 

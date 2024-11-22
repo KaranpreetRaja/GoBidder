@@ -169,8 +169,8 @@ public class AuctionService {
      */
     public Auction updateHighestBidder(Auction auction, Bidder bidder) {
         auction.setCurrentPrice(bidder.getBidderPrice());
-        auction.setHighestBidder(bidder);
-        return this.auctionRepository.updateHighestBidder(auction.getId(), auction.getHighestBidder());
+        auction.setHighestBidder(bidder.getUserId(), bidder.getBidderPrice());
+        return this.auctionRepository.updateHighestBidder(auction.getId(), bidder);
     }
 
     /**
@@ -182,7 +182,7 @@ public class AuctionService {
      */
     public void endAuction(Auction auction) {
         AuctionStatusEnum status;
-        if (auction.getHighestBidder() == null) {
+        if (auction.getHighestBidderId() == null) {
             status = AuctionStatusEnum.CANCELLED;
         } else {
             status = AuctionStatusEnum.WON;

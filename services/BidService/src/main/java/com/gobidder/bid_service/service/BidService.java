@@ -27,7 +27,7 @@ public class BidService {
         AuctionCacheModel auctionCache = getOrFetchAuctionData(bidRequest.getAuctionId());
 
         if (!auctionCache.isActive()) {
-            return createBidResponse("FAILED", "Auction is not active");
+            return createBidResponse("FAILED", "Auction is not active. The auctionId is: " + auctionCache.getAuctionId() + ", isActive: " + auctionCache.isActive() + ", lastUpdateTimestamp: " + auctionCache.getLastUpdateTimestamp());
         }
 
         // Step 2: Get appropriate auction strategy
@@ -35,7 +35,7 @@ public class BidService {
 
         // Step 3: Check if bid is possible
         if (!strategy.isBidPossible(auctionCache, bidRequest)) {
-            return createBidResponse("FAILED", "Bid is not valid for this auction");
+            return createBidResponse("FAILED", "Bid is not valid for this auction where \n\nauction data is: auctionId: " + auctionCache.getAuctionId() + ", currentPrice: " + auctionCache.getCurrentPrice() + ", currentWinningBidderId: " + auctionCache.getCurrentWinningBidderId() + ", isActive: " + auctionCache.isActive() + ", lastUpdateTimestamp: " + auctionCache.getLastUpdateTimestamp() + ", totalAuctionBids: " + auctionCache.getTotalAuctionBids() + ", auctionType: " + auctionCache.getAuctionType() + "\n\n And bid information is: userId: " + bidRequest.getUserId() + ", price: " + bidRequest.getPrice() + ", auctionId: " + bidRequest.getAuctionId());
         }
 
         // Step 4: Process the bid using appropriate strategy
@@ -52,9 +52,10 @@ public class BidService {
     public AuctionCacheModel getOrFetchAuctionData(String auctionId) {
         Optional<AuctionCacheModel> auctionCache = auctionCacheRepository.findById(auctionId);
 
-        if (auctionCache.isPresent()){
-            return auctionCache.get();
-        }
+        // TODO: Uncomment this code after implementing proper dutch auction caching strategy
+//        if (auctionCache.isPresent()){
+//            return auctionCache.get();
+//        }
 
         // Fetch from auction service using gRPC since not in redis cache
         GetAuctionResponse auctionResponse = auctionGrpcClient.getAuction(auctionId);

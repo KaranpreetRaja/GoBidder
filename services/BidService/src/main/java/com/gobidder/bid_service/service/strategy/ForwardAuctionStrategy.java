@@ -6,17 +6,29 @@ import com.gobidder.bid_service.model.AuctionCacheModel;
 import com.gobidder.bid_service.repository.AuctionCacheRepository;
 import com.gobidder.bid_service.service.KafkaProducerService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.Objects;
 
 @RequiredArgsConstructor
 public class ForwardAuctionStrategy implements AuctionStrategy {
+    private static final Logger logger = LoggerFactory.getLogger(ForwardAuctionStrategy.class);
     private final AuctionCacheRepository auctionCacheRepository;
     private final KafkaProducerService kafkaProducerService;
 
     @Override
     public boolean isBidPossible(AuctionCacheModel auctionModel, BidRequest bidRequest) {
-        return bidRequest.getPrice() > auctionModel.getCurrentPrice() &&
-                !bidRequest.getUserId().equals(auctionModel.getCurrentWinningBidderId()) &&
-                auctionModel.isActive();
+        boolean isPriceHigher = bidRequest.getPrice() > auctionModel.getCurrentPrice();
+        boolean isNotCurrentBidder = !Objects.equals(bidRequest.getUserId(), auctionModel.getCurrentWinningBidderId());
+        boolean isAuctionActive = auctionModel.isActive();
+
+        logger.debug("bidRequest.getUserId(): {}", bidRequest.getUserId());
+        logger.debug("auctionModel.getCurrentWinningBidderId(): {}", auctionModel.getCurrentWinningBidderId());
+        logger.debug("isPriceHigher: {}", isPriceHigher);
+        logger.debug("isNotCurrentBidder: {}", isNotCurrentBidder);
+        logger.debug("isAuctionActive: {}", isAuctionActive);
+
+        return isPriceHigher && isNotCurrentBidder && isAuctionActive;
     }
 
     @Override

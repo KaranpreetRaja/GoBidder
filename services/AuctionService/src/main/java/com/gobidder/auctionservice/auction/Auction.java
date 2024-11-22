@@ -26,10 +26,8 @@ public class Auction {
     private Double minimumPrice;
     private LocalDateTime priceUpdatedAt;
     private Integer totalBids;
-    @OneToOne
-    @JoinColumn(name="bidderId", referencedColumnName = "id")
-    @JsonBackReference
-    private Bidder highestBidder;
+
+    private Long highestBidderId;
 
     public Auction() {
         // Empty constructor for Spring Data JPA
@@ -101,6 +99,7 @@ public class Auction {
         this.priceUpdatedAt = startTime;
         this.minimumPrice = minimumPrice;
         this.totalBids = totalBids;
+        this.highestBidderId = null;
     }
 
     public Long getId() {
@@ -231,11 +230,16 @@ public class Auction {
         this.totalBids = totalBids;
     }
 
-    public Bidder getHighestBidder() {
-        return highestBidder;
+    public void setHighestBidder(Long highestBidderId, Double bidPrice) {
+        this.highestBidderId = highestBidderId;
+        this.currentPrice = bidPrice;
     }
 
-    public void setHighestBidder(Bidder highestBidder) {
-        this.highestBidder = highestBidder;
+    public Long getHighestBidderId() {
+        return highestBidderId;
+    }
+
+    public void setHighestBidderId(Long highestBidderId) {
+        this.highestBidderId = highestBidderId;
     }
 }

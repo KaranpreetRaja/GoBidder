@@ -11,8 +11,9 @@ public class Bidder {
     private Long id;
     private Long userId;
     private Double bidderPrice;
-    @OneToOne(mappedBy = "highestBidder", cascade = CascadeType.ALL)
-    @JsonManagedReference
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "auction_id")
     private Auction auction;
 
     public Bidder() {
@@ -61,4 +62,5 @@ public class Bidder {
     public void setAuction(Auction auction) {
         this.auction = auction;
     }
+
 }

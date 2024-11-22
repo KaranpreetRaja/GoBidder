@@ -1,5 +1,8 @@
 package com.gobidder.bid_service.service.strategy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.gobidder.bid_service.dto.BidRequest;
 import com.gobidder.bid_service.dto.BidResponse;
 import com.gobidder.bid_service.model.AuctionCacheModel;
@@ -11,12 +14,21 @@ import lombok.RequiredArgsConstructor;
 public class DutchAuctionStrategy implements AuctionStrategy {
     private final AuctionCacheRepository auctionCacheRepository;
     private final KafkaProducerService kafkaProducerService;
+    private static final Logger logger = LoggerFactory.getLogger(ForwardAuctionStrategy.class);
 
     @Override
     public boolean isBidPossible(AuctionCacheModel auctionModel, BidRequest bidRequest) {
-        return bidRequest.getPrice().equals(auctionModel.getCurrentPrice()) &&
-                auctionModel.isActive() &&
-                auctionModel.getCurrentWinningBidderId() == null;
+        boolean isPriceEqualOrHigher = bidRequest.getPrice() >= auctionModel.getCurrentPrice();
+        boolean isAuctionActive = auctionModel.isActive();
+        boolean isNoCurrentBidder = auctionModel.getCurrentWinningBidderId() == null;
+
+        logger.debug("bidRequest.getUserId(): {}", bidRequest.getUserId());
+        logger.debug("auctionModel.getCurrentWinningBidderId(): {}", auctionModel.getCurrentWinningBidderId());
+        logger.debug("isPriceEqual: {}", isPriceEqualOrHigher);
+        logger.debug("isAuctionActive: {}", isAuctionActive);
+        logger.debug("isNoCurrentBidder: {}", isNoCurrentBidder);
+
+        return isPriceEqualOrHigher && isAuctionActive && isNoCurrentBidder;
     }
 
     @Override
@@ -39,7 +51,7 @@ public class DutchAuctionStrategy implements AuctionStrategy {
             // Publish bid update to Kafka
             kafkaProducerService.sendBidUpdate(
                     auctionModel.getAuctionId(),
-                    bidRequest.getPrice(),
+                    auctionModel.getCurrentPrice(),
                     bidRequest.getUserId(),
                     auctionModel.getLastUpdateTimestamp(),
                     auctionModel.getTotalAuctionBids()
