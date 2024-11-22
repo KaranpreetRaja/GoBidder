@@ -1,0 +1,25 @@
+<!-- templates/receipt.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card mx-auto" style="max-width: 600px;">
+        <div class="card-body">
+            <h2 class="card-title text-center mb-4">Purchase Receipt</h2>
+            <div class="text-center mb-4">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+            </div>
+            <div class="receipt-details">
+                <p><strong>Item:</strong> {{ bid.auction.name }}</p>
+                <p><strong>Final Price:</strong> ${{ bid.bidderPrice }}</p>
+                <p><strong>Transaction Date:</strong> {{ bid.auction.priceUpdatedAt }}</p>
+                <hr>
+                <p class="text-success"><strong>Status:</strong> Payment Successful</p>
+            </div>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('auctions') }}" class="btn btn-primary">Return to Auctions</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

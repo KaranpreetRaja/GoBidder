@@ -7,6 +7,7 @@ import com.gobidder.auctionservice.bidder.Bidder;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.List;
 
 public class AuctionRepositoryConcurrentProxy implements AuctionRepository {
     private final ReentrantLock lock = new ReentrantLock(true);
@@ -27,10 +28,30 @@ public class AuctionRepositoryConcurrentProxy implements AuctionRepository {
     }
 
     @Override
+    public void delete(Long id) {
+        try {
+            lock.lock();
+            repository.delete(id);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     public Auction findById(Long auctionId) {
         try {
             lock.lock();
             return repository.findById(auctionId);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public List<Auction> findAll() {
+        try {
+            lock.lock();
+            return repository.findAll();
         } finally {
             lock.unlock();
         }

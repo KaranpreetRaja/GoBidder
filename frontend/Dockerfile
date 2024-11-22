@@ -1,27 +1,12 @@
-# Stage 1: Build the React application
-FROM node:18-alpine AS builder
+FROM python:3.9-slim
 
-# Set working directory
 WORKDIR /app
 
-# Install dependencies
-COPY package.json package-lock.json ./
-RUN npm install
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application source code
 COPY . .
 
-# Build the React app for production
-RUN npm run build
+EXPOSE 3000
 
-# Stage 2: Serve the application with a lightweight web server
-FROM nginx:stable-alpine
-
-# Copy the built React app from the builder stage
-COPY --from=builder /app/build /usr/share/nginx/html
-
-# Expose the port nginx is running on
-EXPOSE 80
-
-# Start nginx server
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["python", "app.py"]

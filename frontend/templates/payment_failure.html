@@ -1,0 +1,21 @@
+<!-- templates/payment_failure.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card mx-auto" style="max-width: 600px;">
+        <div class="card-body">
+            <h2 class="card-title text-center mb-4">Payment Failed</h2>
+            <div class="text-center mb-4">
+                <i class="bi bi-x-circle-fill text-danger" style="font-size: 3rem;"></i>
+            </div>
+            <div class="alert alert-danger">
+                {{ error if error else "There was an error processing your payment. Please try again." }}
+            </div>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('auctions') }}" class="btn btn-primary">Return to Auctions</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

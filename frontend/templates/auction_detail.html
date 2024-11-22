@@ -1,0 +1,63 @@
+<!-- auction_detail.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2>{{ auction.name }}</h2>
+        <div class="card mb-4">
+            <div class="card-body">
+                <p class="card-text">{{ auction.description }}</p>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Initial Price: ${{ auction.initialPrice }}</li>
+                    <li class="list-group-item">Current Price: ${{ auction.currentPrice }}</li>
+                    <li class="list-group-item">Minimum Price: ${{ auction.minimumPrice }}</li>
+                    <li class="list-group-item">Status: {{ auction.status }}</li>
+                    <li class="list-group-item">Type: {{ auction.type }}</li>
+                    <li class="list-group-item">Start Time: {{ auction.startTime }}</li>
+                    {% if auction.duration %}
+                    <li class="list-group-item">Duration: {{ auction.duration }} minutes</li>
+                    {% endif %}
+                    <li class="list-group-item">Last Updated: {{ auction.priceUpdatedAt }}</li>
+                </ul>
+            </div>
+        </div>
+
+        {% if auction.status == 'WON' %}
+            {% if highest_bid and highest_bid.userId == session.get('user_id') %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">🎉 Congratulations! You won this auction!</h5>
+                        <p class="card-text">Winning bid: ${{ highest_bid.bidderPrice }}</p>
+                        <form method="POST" action="{{ url_for('purchase_auction', id=auction.id) }}" class="mb-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-cart-check"></i> Complete Purchase (${{ highest_bid.bidderPrice }})
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> This auction has been won
+                </div>
+            {% endif %}
+        {% endif %}
+
+        {% if auction.auctionOwnerId == session.get('user_id') and auction.status == 'NOT_STARTED' %}
+        <form method="POST" action="{{ url_for('start_auction', id=auction.id) }}" class="mb-4">
+            <button type="submit" class="btn btn-success">Start Auction</button>
+        </form>
+        {% endif %}
+        
+        {% if auction.status == 'ACTIVE' %}
+        <form method="POST" action="{{ url_for('place_bid', id=auction.id) }}">
+            <div class="mb-3">
+                <label for="bid" class="form-label">Your Bid</label>
+                <input type="number" step="0.01" class="form-control" id="bid" name="bid" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Place Bid</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

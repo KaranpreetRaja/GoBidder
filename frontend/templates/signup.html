@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2 class="text-center mb-4">Sign Up</h2>
+        <form method="POST">
+            <!-- Account Information -->
+            <div class="mb-4">
+                <h5>Account Information</h5>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required 
+                           minlength="6" title="Password must be at least 6 characters long">
+                </div>
+                <div class="mb-3">
+                    <label for="fullName" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="fullName" name="fullName" required>
+                </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="mb-4">
+                <h5>Payment Information</h5>
+                <div class="mb-3">
+                    <label for="cardNumber" class="form-label">Card Number</label>
+                    <input type="text" class="form-control" id="cardNumber" name="cardNumber" 
+                           pattern="\d{16}" maxlength="16" required
+                           placeholder="16 digit card number">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="csv" class="form-label">CSV</label>
+                        <input type="text" class="form-control" id="csv" name="csv" 
+                               pattern="\d{3}" maxlength="3" required
+                               placeholder="3 digit security code">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="expirationDate" class="form-label">Expiration Date</label>
+                        <input type="text" class="form-control" id="expirationDate" name="expirationDate" 
+                               pattern="(0[1-9]|1[0-2])\/([0-9]{2})" required
+                               placeholder="MM/YY">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="billingAddress" class="form-label">Billing Address</label>
+                    <textarea class="form-control" id="billingAddress" name="billingAddress" 
+                              required rows="2"></textarea>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Sign Up</button>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-secondary">Already have an account? Login</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

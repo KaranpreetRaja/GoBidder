@@ -52,6 +52,10 @@ public class User implements UserDetails {
         return email;
     }
 
+    public Integer getId() {
+        return id;
+    }
+
     public String getFullName() {
         return fullName;
     }

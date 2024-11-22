@@ -4,15 +4,16 @@ An open market auction website that facilitates conventional and Dutch auctions.
 ## Project Structure
 ```
 .
-├── frontend/                 # React frontend application
-│   ├── public/              # Static files
-│   └── src/                 # Frontend source code
+├── frontend/                # React frontend application
+│   ├── app.py               # Flask app
+│   └── templates/           # Frontend templates
 ├── services/                # Backend microservices
 │   ├── AuctionService/      # Handles auction operations
 │   ├── AuthService/         # User authentication
+|   ├── BidService/          # Handles bidding operations
 │   ├── PaymentService/      # Payment processing
-│   ├── Kafka/              # Message broker service
-│   └── ReverseProxy/       # Nginx reverse proxy
+│   ├── Kafka/               # Message broker service
+│   └── ReverseProxy/        # Nginx reverse proxy
 └── docker-compose.yml  
 ```
 
@@ -48,6 +49,7 @@ docker compose up -d
 - Auth Service: http://localhost:8081
 - Payment Service: http://localhost:8082
 - Auction Service: http://localhost:8083
+- Bid Service: http://localhost:8084
 - Reverse Proxy: http://localhost:8080
 - Kafka: http://localhost:9092
 
@@ -57,9 +59,10 @@ The application consists of several microservices:
 - Auth Service: Handles user authentication and authorization
 - Payment Service: Processes payment transactions
 - Auction Service: Manages auction operations
+- Bid Service: Manages bidding operations
 - Reverse Proxy: Routes requests and handles CORS
 - Kafka: Message broker for inter-service communication
-- Frontend: React-based user interface
+- Frontend: User interface
 
 ## Development
 To run individual services:
@@ -72,6 +75,7 @@ docker compose up <service-name> -d
 # - auth-service
 # - payment-service
 # - auction-service
+# - bid-service
 # - reverse-proxy
 # - kafka
 ```
