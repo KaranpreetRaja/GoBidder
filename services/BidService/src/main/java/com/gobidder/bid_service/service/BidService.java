@@ -52,9 +52,10 @@ public class BidService {
     public AuctionCacheModel getOrFetchAuctionData(String auctionId) {
         Optional<AuctionCacheModel> auctionCache = auctionCacheRepository.findById(auctionId);
 
-        if (auctionCache.isPresent()){
-            return auctionCache.get();
-        }
+        // TODO: Uncomment this code after implementing proper dutch auction caching strategy
+//        if (auctionCache.isPresent()){
+//            return auctionCache.get();
+//        }
 
         // Fetch from auction service using gRPC since not in redis cache
         GetAuctionResponse auctionResponse = auctionGrpcClient.getAuction(auctionId);
