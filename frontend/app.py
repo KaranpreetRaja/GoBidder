@@ -11,6 +11,7 @@ app.secret_key = os.urandom(24).hex()
 AUTH_API = os.getenv("AUTH_API")
 AUCTION_API = os.getenv("AUCTION_API")
 PAYMENT_API = os.getenv("PAYMENT_API")
+BID_API = os.getenv("BID_API")
 
 
 def login_required(f):
@@ -185,18 +186,37 @@ def start_auction(id):
 @app.route("/auction/<int:id>/bid", methods=["POST"])
 @login_required
 def place_bid(id):
+    bid_amount = float(request.form["bid"])
+    user_id = session.get("user_id")
+    success = False
+    # Try bid service first
     try:
-        bid_amount = float(request.form["bid"])
         response = requests.post(
-            f"{AUCTION_API}/auction/{id}/bid",
-            json={"userId": session.get("user_id"), "bid": bid_amount},
+            f"{BID_API}/api/bids/placeBid",
+            json={
+                "auctionId": str(id),
+                "price": bid_amount,
+                "userId": str(user_id),
+            },
         )
         if response.ok:
+            success = True
             flash("Bid placed successfully", "success")
-        else:
-            flash("Failed to place bid", "danger")
     except requests.exceptions.RequestException:
-        flash("Service unavailable", "danger")
+        pass
+    # If not successful, try the auction service endpoint equivalent
+    if not success:
+        try:
+            response = requests.post(
+                f"{AUCTION_API}/auction/{id}/bid",
+                json={"userId": user_id, "bid": bid_amount},
+            )
+            if response.ok:
+                flash("Bid placed successfully", "success")
+            else:
+                flash("Failed to place bid", "danger")
+        except requests.exceptions.RequestException:
+            flash("Service unavailable", "danger")
     return redirect(url_for("view_auction", id=id))
 
 

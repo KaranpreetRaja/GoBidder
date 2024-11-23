@@ -97,6 +97,7 @@ services:
       - AUTH_API=http://auth-service:8081
       - PAYMENT_API=http://payment-service:8082
       - AUCTION_API=http://auction-service:8083
+      - BID_API=http://bid-service:8084
       - FLASK_ENV=production
       - FLASK_APP=app.py
     depends_on:
