@@ -83,4 +83,8 @@ public class User implements UserDetails {
     public PaymentInfo getPaymentInfo() {
         return paymentInfo;
     }
+
+    public String getEmail() {
+        return email;
+    }
 }
