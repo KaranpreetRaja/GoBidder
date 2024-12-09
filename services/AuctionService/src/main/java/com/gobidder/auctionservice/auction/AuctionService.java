@@ -15,11 +15,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.gobidder.auctionservice.auction.kafka.KafkaConfig;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class AuctionService {
@@ -30,11 +33,19 @@ public class AuctionService {
 
     private final AuctionRepository auctionRepository;
     private final TaskScheduler taskScheduler;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Autowired
     public AuctionService(AuctionRepository auctionRepository, TaskScheduler taskScheduler) {
         this.auctionRepository = auctionRepository;
         this.taskScheduler = taskScheduler;
+    }
+
+    @Autowired
+    public AuctionService(AuctionRepository auctionRepository, TaskScheduler taskScheduler, KafkaTemplate<String, Object> kafkaTemplate) {
+        this.auctionRepository = auctionRepository;
+        this.taskScheduler = taskScheduler;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     /**
@@ -209,6 +220,18 @@ public class AuctionService {
             status = AuctionStatusEnum.WON;
         }
         this.auctionRepository.updateStatus(auction.getId(), status);
+
+        // Added Kafka integration
+        try {
+            Map<String, Object> event = new HashMap<>();
+            event.put("auctionId", auction.getId());
+            event.put("status", status.toString());
+            event.put("highestBidderId", auction.getHighestBidderId());
+            kafkaTemplate.send("auction.ended", event);
+            logger.info("Auction end event published: {}", event);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
     public Auction updateHighestBidder(Long auctionId, BidUpdateMessage message) {
