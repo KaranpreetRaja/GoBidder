@@ -30,6 +30,9 @@ public class AuctionService {
 
     private final AuctionRepository auctionRepository;
     private final TaskScheduler taskScheduler;
+    
+    @Autowired
+    private BidService bidService;
 
     @Autowired
     public AuctionService(AuctionRepository auctionRepository, TaskScheduler taskScheduler) {
@@ -221,6 +224,7 @@ public class AuctionService {
      * @param auction The auction to schedule the price decrease of.
      */
     public void scheduleDutchAuctionPriceDecrease(Auction auction) {
+        
         if (!auction.getType().equals(AuctionTypeEnum.DUTCH)) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
@@ -228,6 +232,9 @@ public class AuctionService {
             );
         }
 
+        bidService.startDutchCountdown(auction.getId(), PRICE_DECREASE_AMOUNT, PRICE_DECREASE_INTERVAL_SECONDS);
+
+        /*
         Instant auctionPriceDecreaseInstant = LocalDateTime.now()
             .plusSeconds(PRICE_DECREASE_INTERVAL_SECONDS)
             .atZone(ZoneId.systemDefault())
@@ -269,6 +276,7 @@ public class AuctionService {
         );
         logger.info("Scheduled auction price decrease for auction id {} at {}",
             auction.getId(), auctionPriceDecreaseInstant);
+        */
     }
 
     /**

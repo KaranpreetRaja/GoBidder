@@ -76,4 +76,10 @@ public class DutchAuctionStrategy implements AuctionStrategy {
         response.setMessage(message);
         return response;
     }
+
+    // TODO: Takes in the auctioncachemodel, and the new price
+    // Performs update by copying lines 48-58, publish bid to kafka and redis cache
+    public void updateAuctionPrice(AuctionCacheModel auctionModel, double newPrice) {
+        
+    }
 }

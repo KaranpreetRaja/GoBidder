@@ -21,6 +21,18 @@ public class BidService {
     private final AuctionGrpcClient auctionGrpcClient;
     private final AuctionStrategyFactory auctionStrategyFactory;
 
+    private static final Logger logger = LoggerFactory.getLogger(BidService.class);
+    private final TaskScheduler taskScheduler;
+    private AuctionService auctionService;
+    private RedisTemplate<String, Object> redisTemplate;
+
+    // TODO: Maybe remove this constructor
+    public BidService(TaskScheduler taskScheduler, RedisTemplate<String, Object> redisTemplate, AuctionGrpcClient auctionGrpcClient) {
+        this.taskScheduler = taskScheduler;
+        this.redisTemplate = redisTemplate;
+        this.auctionGrpcClient = auctionGrpcClient;
+    }
+
 
     public BidResponse processBid(BidRequest bidRequest) {
         // Step 1: Get or fetch auction data
@@ -85,6 +97,82 @@ public class BidService {
         auctionPriceResponse.setPrice(auctionResponse.getCurrentPrice());
         auctionPriceResponse.setWinningUserId(auctionResponse.getCurrentWinningBidderId());
         return auctionPriceResponse;
+    }
+
+    // TODO: Change the parameters/fields so they reference the proto buffer
+    public void startDutchCountdown(Long auctionId, double priceDecrease, int intervalSeconds) {
+        Instant nextDecreaseInstant = LocalDateTime.now()
+                .plusSeconds(intervalSeconds)
+                .atZone(ZoneId.systemDefault())
+                .toInstant();
+
+        this.taskScheduler.schedule(
+            () -> {
+                try {
+                    logger.info("Reducing price of auction id {} by {}",
+                    a.getId(), PRICE_DECREASE_AMOUNT);
+
+                    double updatedPrice = auctionGrpcClient.decreasePrice(auctionId, priceDecrease);
+                    redisTemplate.opsForValue().set("auction_price_" + auctionId, updatedPrice);
+                    logger.info("Updated auction price for ID {} stored in Redis: {}", auctionId, updatedPrice);
+
+                    auctionGrpcClient.performBidUpdate(auctionId, updatedPrice);
+                    if (updatedPrice > 0) {
+                        startDutchAuctionCountdown(auctionId, priceDecrease, intervalSeconds);
+                    }
+                    else {
+                        logger.info("Dutch auction id {} not active, not scheduling further", auctionId);
+                    }
+                } catch (Exception e) {
+                    logger.error("Error during Dutch auction countdown for ID {}: {}", auctionId, e.getMessage());
+                }
+            }, nextDecreaseInstant);
+
+            logger.info("Scheduled Dutch auction countdown for ID {} at {}", auctionId, nextDecreaseInstant);
+        
+        /*
+        Instant auctionPriceDecreaseInstant = LocalDateTime.now()
+            .plusSeconds(PRICE_DECREASE_INTERVAL_SECONDS)
+            .atZone(ZoneId.systemDefault())
+            .toInstant();
+
+        this.taskScheduler.schedule(
+            () -> {
+                Auction a = this.get(auction.getId());
+
+                logger.info("Reducing price of auction id {} by {}",
+                    a.getId(), PRICE_DECREASE_AMOUNT);
+
+                // Get strategy
+                AuctionStrategyFactory factory = AuctionStrategyFactory.getInstance();
+                AuctionStrategy strategy = factory.getAuctionStrategy(a);
+
+                if (a.getStatus().equals(AuctionStatusEnum.ACTIVE)) {
+                    if (strategy.isEnding(a)) {
+                        logger.info("Ending Dutch auction id {}", a.getId());
+                        // End auction
+                        this.endAuction(a);
+                    } else {
+                        // Decrease price
+                        this.decreasePrice(
+                            a,
+                            PRICE_DECREASE_AMOUNT
+                        );
+                        logger.info("Scheduling another Dutch price decrease for auction id {}",
+                            a.getId());
+                        // Reschedule task
+                        this.scheduleDutchAuctionPriceDecrease(a);
+                    }
+                } else {
+                    logger.info("Dutch auction id {} not active, not scheduling further",
+                        a.getId());
+                }
+            },
+            auctionPriceDecreaseInstant
+        );
+        logger.info("Scheduled auction price decrease for auction id {} at {}",
+            auction.getId(), auctionPriceDecreaseInstant);
+        */
     }
 
 }
