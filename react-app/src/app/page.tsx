@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,10 +19,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useRouter } from "next/navigation";
 
 
 export default function Home() {
+  const router = useRouter();
   return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="grid grid-cols-2 gap-8">
+        {/* Left Column */}
+        <div className="flex flex-col space-y-4">
+          <Label htmlFor="welcome">Welcome to GoBidder</Label>
+        </div>
+        {/* Right Column */}
+        <div className="flex flex-col space-y-4">
+          <Button onClick={() => router.push("react-app\src\app\login\page.tsx")}>Sign-In</Button>
+          <Button>Sign-Up</Button>
+        </div>
+      </div>
+    </div>
+    /*
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <Button className="row-start-1">Hello, world!</Button>
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
@@ -129,5 +147,6 @@ export default function Home() {
         </a>
       </footer>
     </div>
+    */
   );
 }

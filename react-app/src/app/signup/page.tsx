@@ -19,7 +19,6 @@ export default function Home() {
       <Card className="w-full max-w-4xl p-6">
         <CardHeader>
           <CardTitle>Sign Up</CardTitle>
-          <CardDescription>Deploy your new project in one-click.</CardDescription>
         </CardHeader>
         <CardContent>
           <form>
