@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -70,7 +71,9 @@ export default function Home() {
           </form>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline">Go Back</Button>
+          <Link href="/">
+            <Button variant="outline">Go Back</Button>
+          </Link>
           <Button>Submit</Button>
         </CardFooter>
       </Card>

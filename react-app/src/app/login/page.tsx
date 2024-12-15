@@ -1,6 +1,7 @@
 "use client"
 
-import Image from "next/image";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,54 +10,102 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Form, FormField, FormLabel, FormControl, FormItem, FormMessage, FormDescription } from "@/components/ui/form";
+} from "@/components/ui/card";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
-const formSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-})
+import { authAxios } from "@/lib/axios";
+import { isAxiosError } from "axios";
+import Link from "next/link";
 
 export default function Home() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Make the login request
+      const response = await authAxios.post(
+        '/auth/login',
+        { username: email, password }
+      );
+
+      // Example: Save JWT to localStorage
+      const { token } = response.data; // Adjust according to your API response structure
+      localStorage.setItem('jwt', token);
+
+      // Redirect to the home page
+      router.push('/');
+    } catch (error) {
+      if (isAxiosError(error)) {
+        // Narrowed down to AxiosError
+        console.error('Login failed:', error.response?.data || error.message);
+        alert(error.response?.data?.message || 'Login failed. Please check your credentials.');
+      } else if (error instanceof Error) {
+        // Handle other types of errors
+        console.error('Unexpected error:', error.message);
+        alert('An unexpected error occurred. Please try again.');
+      } else {
+        console.error('Unknown error:', error);
+        alert('An unknown error occurred.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Card className="w-[350px]">
-      <CardHeader>
-        <CardTitle>Sign In</CardTitle>
-        <CardDescription>Deploy your new project in one-click.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form>
-          <div className="grid w-full items-center gap-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="name">Username</Label>
-              <Input id="name" placeholder="" />
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <Card className="w-[450px]">
+        <CardHeader>
+          <CardTitle>Sign In</CardTitle>
+          <CardDescription>
+            Sign into GoBidder with your email and password.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form>
+            <div className="grid w-full items-center gap-4">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="email">Username</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  placeholder="Enter your password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)} // Update password state
+                />
+              </div>
             </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="framework">Password</Label>
-              <Input id="name" placeholder="" />
-            </div>
-          </div>
-        </form>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline">Go Back</Button>
-        <Button>Submit</Button>
-      </CardFooter>
-    </Card>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Link href="/">
+            <Button variant="outline">Go Back</Button>
+          </Link>
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Submitting...' : 'Submit'}
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }
