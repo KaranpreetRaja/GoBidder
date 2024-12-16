@@ -19,7 +19,16 @@ import { authAxios } from "@/lib/axios";
 import { isAxiosError } from "axios";
 import Link from "next/link";
 
+import { useAuth } from "@/lib/auth_context";
+
 export default function Home() {
+  const { isAuthenticated, login } = useAuth();
+
+  if (isAuthenticated) {
+    window.location.href = '/login';
+    return;
+  }
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,17 +39,14 @@ export default function Home() {
     setLoading(true);
 
     try {
-      // Make the login request
       const response = await authAxios.post(
         '/auth/login',
         { username: email, password }
       );
 
-      // Example: Save JWT to localStorage
-      const { token } = response.data; // Adjust according to your API response structure
-      localStorage.setItem('jwt', token);
+      const { token } = response.data;
+      login(token);
 
-      // Redirect to the home page
       router.push('/');
     } catch (error) {
       if (isAxiosError(error)) {
