@@ -77,9 +77,26 @@ public class DutchAuctionStrategy implements AuctionStrategy {
         return response;
     }
 
-    // TODO: Takes in the auctioncachemodel, and the new price
     // Performs update by copying lines 48-58, publish bid to kafka and redis cache
     public void updateAuctionPrice(AuctionCacheModel auctionModel, double newPrice) {
-        
+        try {
+            auctionModel.setCurrentPrice(newPrice);
+            auctionModel.setLastUpdateTimestamp(System.currentTimeMillis());
+
+            logger.info("Updated auction price for auction ID {} to new price: {}", auctionModel.getAuctionId(), newPrice);
+
+            auctionCacheRepository.save(auctionModel);
+
+            kafkaProducerService.sendBidUpdate(
+                    auctionModel.getAuctionId(),
+                    auctionModel.getCurrentPrice(),
+                    bidRequest.getUserId(),
+                    auctionModel.getLastUpdateTimestamp(),
+                    auctionModel.getTotalAuctionBids()
+            );
+            logger.info("Published updated auction price to Kafka for auction ID {}", auctionModel.getAuctionId());
+        } catch (Exception e) {
+            logger.error("Failed to update Dutch auction price for auction ID {}: {}", auctionModel.getAuctionId(), e.getMessage(), e);
+        }
     }
 }
