@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auction-service
+  labels:
+    app: auction-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auction-service
+  template:
+    metadata:
+      labels:
+        app: auction-service
+    spec:
+      imagePullSecrets:
+      - name: ghcr-secret
+      containers:
+      - name: auction-service
+        image: gobidder-auction-service
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8083
+        - containerPort: 9090
+        env:
+        - name: GRPC_AUCTION_HOST
+          value: "auction-service"
+        - name: GRPC_AUCTION_PORT
+          value: "9090"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:29092"
+        - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:29092"
+        - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
+          value: "PLAINTEXT"
+        - name: SPRING_KAFKA_PROPERTIES_SASL_MECHANISM
+          value: "PLAINTEXT"
+        volumeMounts:
+        - name: auth-data
+          mountPath: /app/data
+      volumes:
+      - name: auth-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auction-service
+spec:
+  selector:
+    app: auction-service
+  ports:
+  - name: grpc-port
+    protocol: TCP
+    port: 9090
+    targetPort: 9090
+  - name: http-port
+    protocol: TCP
+    port: 8083
+    targetPort: 8083
+

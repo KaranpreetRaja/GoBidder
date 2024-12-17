@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  labels:
+    app: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+      - name: auth-service
+        image: gobidder-auth-service
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8081
+        volumeMounts:
+        - name: auth-data
+          mountPath: /app/data
+      volumes:
+      - name: auth-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  selector:
+    app: auth-service
+  ports:
+  - protocol: TCP
+    port: 8081
+    targetPort: 8081
+
