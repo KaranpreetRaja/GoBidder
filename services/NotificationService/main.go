@@ -9,7 +9,6 @@ import (
     "sync"
     "sync/atomic"
     "time"
-    "strconv"
 
     "github.com/gorilla/websocket"
     "github.com/segmentio/kafka-go"
@@ -234,23 +233,17 @@ func (ns *NotificationService) startKafkaConsumer() {
         kafkaServer = "kafka:29092" // default to Kafka service in Docker Compose
     }
 
-    batchSize := 10
-    if bs := os.Getenv("KAFKA_BATCH_SIZE"); bs != "" {
-        if i, err := strconv.Atoi(bs); err == nil {
-            batchSize = i
-        }
-    }
-
     reader := kafka.NewReader(kafka.ReaderConfig{
         Brokers:   []string{kafkaServer},
         Topic:     "bid-updates",
         GroupID:   "notification-service-group",
-        MinBytes:  10e3,
-        MaxBytes:  10e6,
-        BatchSize: batchSize,
+        MinBytes:  10e3, // 10KB
+        MaxBytes:  10e6, // 10MB
     })
 
     defer reader.Close()
+
+    log.Printf("Connected to Kafka at %s, topic: bid-updates", kafkaServer)
 
     for {
         msg, err := reader.ReadMessage(context.Background())
@@ -302,7 +295,7 @@ func main() {
     // Metrics Endpoint: GET /metrics (HTTP)
     http.HandleFunc("/metrics", ns.handleMetrics)
     
-    
+
     log.Printf("Starting server on :%s", port)
     if err := http.ListenAndServe(":"+port, nil); err != nil {
         log.Fatal("ListenAndServe: ", err)
