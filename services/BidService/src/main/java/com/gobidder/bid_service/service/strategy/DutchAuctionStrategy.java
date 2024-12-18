@@ -14,36 +14,41 @@ import lombok.RequiredArgsConstructor;
 public class DutchAuctionStrategy implements AuctionStrategy {
     private final AuctionCacheRepository auctionCacheRepository;
     private final KafkaProducerService kafkaProducerService;
-    private static final Logger logger = LoggerFactory.getLogger(ForwardAuctionStrategy.class);
+    private static final Logger logger = LoggerFactory.getLogger(DutchAuctionStrategy.class);
 
     @Override
     public boolean isBidPossible(AuctionCacheModel auctionModel, BidRequest bidRequest) {
-        boolean isPriceEqualOrHigher = bidRequest.getPrice() >= auctionModel.getCurrentPrice();
+        boolean isPriceEqualOrHigher = auctionModel.getCurrentPrice() - bidRequest.getPrice() <= 0;
         boolean isAuctionActive = auctionModel.isActive();
-        boolean isNoCurrentBidder = auctionModel.getCurrentWinningBidderId() == "" || auctionModel.getCurrentWinningBidderId() == null;
 
-        logger.debug("bidRequest.getUserId(): {}", bidRequest.getUserId());
-        logger.debug("auctionModel.getCurrentWinningBidderId(): {}", auctionModel.getCurrentWinningBidderId());
-        logger.debug("isPriceEqual: {}", isPriceEqualOrHigher);
-        logger.debug("isAuctionActive: {}", isAuctionActive);
-        logger.debug("isNoCurrentBidder: {}", isNoCurrentBidder);
-        logger.info("All checks:\nisPriceEqualOrHigher: {}\nisAuctionActive: {}\nisNoCurrentBidder: {}", isPriceEqualOrHigher, isAuctionActive, isNoCurrentBidder);
+        // Check if current winner is null or empty string
+        String currentWinner = auctionModel.getCurrentWinningBidderId();
+        boolean isNoCurrentBidder = currentWinner == null || currentWinner.trim().isEmpty();
 
-        return isPriceEqualOrHigher && isAuctionActive && isNoCurrentBidder;
+        logger.debug("Checking Dutch auction bid validity:");
+        logger.debug("Current price: {}, Bid price: {}", auctionModel.getCurrentPrice(), bidRequest.getPrice());
+        logger.debug("Price match: {}", isPriceEqualOrHigher);
+        logger.debug("Is auction active: {}", isAuctionActive);
+        logger.debug("Current winner: '{}', No current bidder: {}", currentWinner, isNoCurrentBidder);
+
+        boolean isValid = isPriceEqualOrHigher && isAuctionActive && isNoCurrentBidder;
+        logger.info("Dutch auction bid validity result: {} (price match: {}, active: {}, no winner: {})",
+                isValid, isPriceEqualOrHigher, isAuctionActive, isNoCurrentBidder);
+
+        return isValid;
     }
 
     @Override
     public BidResponse publishBid(AuctionCacheModel auctionModel, BidRequest bidRequest) {
         try {
-            logger.info("Received bid request for Dutch auction with auction ID: {} and price: {}",
-                    auctionModel.getAuctionId(), bidRequest.getPrice());
+            logger.info("Processing bid for Dutch auction ID: {}, price: {}, bidder: {}",
+                    auctionModel.getAuctionId(), bidRequest.getPrice(), bidRequest.getUserId());
 
-            // For Dutch auction, first bid at the current price wins
-            if (!auctionModel.getCurrentWinningBidderId().isEmpty()) {
-                logger.error("Auction already has a winning bid");
+            String currentWinner = auctionModel.getCurrentWinningBidderId();
+            if (currentWinner != null && !currentWinner.trim().isEmpty()) {
+                logger.error("Auction already has a winning bid from bidder: {}", currentWinner);
                 return createErrorResponse("Auction already has a winning bid");
             }
-
 
             // Update auction cache with winning bid
             auctionModel.setCurrentWinningBidderId(bidRequest.getUserId());
@@ -63,8 +68,10 @@ public class DutchAuctionStrategy implements AuctionStrategy {
                     auctionModel.getTotalAuctionBids()
             );
 
+            logger.info("Successfully processed winning bid for Dutch auction ID: {}", auctionModel.getAuctionId());
             return createSuccessResponse();
         } catch (Exception e) {
+            logger.error("Failed to process Dutch auction bid: {}", e.getMessage(), e);
             return createErrorResponse("Failed to process bid: " + e.getMessage());
         }
     }
