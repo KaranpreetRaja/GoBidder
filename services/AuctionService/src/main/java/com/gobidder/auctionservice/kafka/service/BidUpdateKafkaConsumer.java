@@ -1,4 +1,4 @@
-package com.gobidder.auctionservice.kafka;
+package com.gobidder.auctionservice.kafka.service;
 
 import com.gobidder.auctionservice.auction.AuctionService;
 import com.gobidder.auctionservice.auction.dto.BidUpdateMessage;
