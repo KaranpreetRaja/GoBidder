@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bid-service
+  labels:
+    app: bid-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bid-service
+  template:
+    metadata:
+      labels:
+        app: bid-service
+    spec:
+      containers:
+      - name: bid-service
+        image: gobidder-bid-service
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8084
+        env:
+        - name: SPRING_DATA_REDIS_HOST
+          value: "redis"
+        - name: SPRING_DATA_REDIS_PORT
+          value: "6379"
+        - name: GRPC_AUCTION_HOST
+          value: "auction-service"
+        - name: GRPC_AUCTION_PORT
+          value: "9090"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:29092"
+        - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
+          value: "PLAINTEXT"
+        - name: SPRING_KAFKA_PROPERTIES_SASL_MECHANISM
+          value: "PLAINTEXT"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bid-service
+spec:
+  selector:
+    app: bid-service
+  ports:
+  - protocol: TCP
+    port: 8084
+    targetPort: 8084
+
