@@ -20,13 +20,14 @@ public class DutchAuctionStrategy implements AuctionStrategy {
     public boolean isBidPossible(AuctionCacheModel auctionModel, BidRequest bidRequest) {
         boolean isPriceEqualOrHigher = bidRequest.getPrice() >= auctionModel.getCurrentPrice();
         boolean isAuctionActive = auctionModel.isActive();
-        boolean isNoCurrentBidder = auctionModel.getCurrentWinningBidderId() == null;
+        boolean isNoCurrentBidder = auctionModel.getCurrentWinningBidderId() == "" || auctionModel.getCurrentWinningBidderId() == null;
 
         logger.debug("bidRequest.getUserId(): {}", bidRequest.getUserId());
         logger.debug("auctionModel.getCurrentWinningBidderId(): {}", auctionModel.getCurrentWinningBidderId());
         logger.debug("isPriceEqual: {}", isPriceEqualOrHigher);
         logger.debug("isAuctionActive: {}", isAuctionActive);
         logger.debug("isNoCurrentBidder: {}", isNoCurrentBidder);
+        logger.info("All checks:\nisPriceEqualOrHigher: {}\nisAuctionActive: {}\nisNoCurrentBidder: {}", isPriceEqualOrHigher, isAuctionActive, isNoCurrentBidder);
 
         return isPriceEqualOrHigher && isAuctionActive && isNoCurrentBidder;
     }
@@ -34,10 +35,15 @@ public class DutchAuctionStrategy implements AuctionStrategy {
     @Override
     public BidResponse publishBid(AuctionCacheModel auctionModel, BidRequest bidRequest) {
         try {
+            logger.info("Received bid request for Dutch auction with auction ID: {} and price: {}",
+                    auctionModel.getAuctionId(), bidRequest.getPrice());
+
             // For Dutch auction, first bid at the current price wins
-            if (auctionModel.getCurrentWinningBidderId() != null) {
+            if (!auctionModel.getCurrentWinningBidderId().isEmpty()) {
+                logger.error("Auction already has a winning bid");
                 return createErrorResponse("Auction already has a winning bid");
             }
+
 
             // Update auction cache with winning bid
             auctionModel.setCurrentWinningBidderId(bidRequest.getUserId());
@@ -90,7 +96,7 @@ public class DutchAuctionStrategy implements AuctionStrategy {
             kafkaProducerService.sendBidUpdate(
                     auctionModel.getAuctionId(),
                     auctionModel.getCurrentPrice(),
-                    bidRequest.getUserId(),
+                    auctionModel.getCurrentWinningBidderId(),
                     auctionModel.getLastUpdateTimestamp(),
                     auctionModel.getTotalAuctionBids()
             );
