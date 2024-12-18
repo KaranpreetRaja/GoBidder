@@ -32,6 +32,7 @@ services:
       - auth-data:/app/data
     networks:
       - microservices-network
+
   payment-service:
     build:
       context: ./services
@@ -144,6 +145,22 @@ services:
       - microservices-network
     depends_on:
       - zookeeper
+  
+  notification-service:
+    build:
+      context: ./services/NotificationService
+      dockerfile: Dockerfile
+    hostname: notification-service
+    container_name: notification-service
+    ports:
+      - "8085:8085"
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - PORT=8085
+    depends_on:
+      - kafka
+    networks:
+      - microservices-network
 
 networks:
   microservices-network:
