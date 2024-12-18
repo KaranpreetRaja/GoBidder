@@ -25,7 +25,7 @@ export default function Home() {
   const { isAuthenticated, login } = useAuth();
 
   if (isAuthenticated) {
-    window.location.href = '/login';
+    window.location.href = '/';
     return;
   }
 
@@ -40,8 +40,8 @@ export default function Home() {
 
     try {
       const response = await authAxios.post(
-        '/auth/login',
-        { username: email, password }
+        '/api/auth/login',
+        { email, password }
       );
 
       const { token } = response.data;
@@ -97,7 +97,7 @@ export default function Home() {
                   placeholder="Enter your password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)} // Update password state
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
             </div>

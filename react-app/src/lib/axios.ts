@@ -63,10 +63,10 @@ const addInterceptors = (axiosInstance: AxiosInstance) => {
     axiosInstance.interceptors.response.use(
         (response) => response,
         (error) => {
-            console.log(`Intercepting response error from ${error.url}`);
+            console.log(`Intercepting response error from ${error}`);
             if (error.response?.status === 401) {
                 console.error('Unauthorized - Redirecting to login');
-                window.location.href = '/login';
+                // window.location.href = '/login';
             }
             return Promise.reject(error);
         }
