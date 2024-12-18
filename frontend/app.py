@@ -1,17 +1,19 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from datetime import datetime, timezone, timedelta
 from functools import wraps
-
+import json
+from urllib.parse import urljoin
 import requests
 import os
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24).hex()
 
-AUTH_API = os.getenv("AUTH_API")
-AUCTION_API = os.getenv("AUCTION_API")
-PAYMENT_API = os.getenv("PAYMENT_API")
-
+AUTH_API = os.getenv("AUTH_API", "http://auth-service:8081")
+AUCTION_API = os.getenv("AUCTION_API", "http://auction-service:8083")
+PAYMENT_API = os.getenv("PAYMENT_API", "http://payment-service:8082")
+BID_SERVICE = os.getenv("BID_SERVICE", "http://bid-service:8084")
+NOTIFICATION_WS = os.getenv("NOTIFICATION_WS", "ws://notification-service:8085")
 
 def login_required(f):
     @wraps(f)
@@ -94,13 +96,31 @@ def signup():
             )
 
             if response.ok:
-                flash("Account created successfully", "success")
+                # If user creation is successful, attempt to log them in
+                login_response = requests.post(
+                    f"{AUTH_API}/auth/login",
+                    json={
+                        "email": request.form["email"],
+                        "password": request.form["password"]
+                    }
+                )
+                
+                if login_response.ok:
+                    data = login_response.json()
+                    session["token"] = data["token"]
+                    if fetch_user_profile(data["token"]):
+                        flash("Account created successfully", "success")
+                        return redirect(url_for("auctions"))
+                    
+                flash("Account created but login failed", "warning")
                 return redirect(url_for("login"))
-            flash("Signup failed", "danger")
-        except requests.exceptions.RequestException:
-            flash("Service unavailable", "danger")
-        except KeyError:
-            flash("Please fill in all required fields", "danger")
+            else:
+                error_msg = response.json().get("message", "Signup failed")
+                flash(f"Signup failed: {error_msg}", "danger")
+        except requests.exceptions.RequestException as e:
+            flash(f"Service unavailable: {str(e)}", "danger")
+        except KeyError as e:
+            flash(f"Missing required field: {str(e)}", "danger")
     return render_template("signup.html")
 
 
@@ -182,23 +202,42 @@ def start_auction(id):
     return redirect(url_for("view_auction", id=id))
 
 
+
+# Update the place_bid route in app.py
 @app.route("/auction/<int:id>/bid", methods=["POST"])
 @login_required
 def place_bid(id):
     try:
         bid_amount = float(request.form["bid"])
+        
+        # Use bid service instead of auction service
         response = requests.post(
-            f"{AUCTION_API}/auction/{id}/bid",
-            json={"userId": session.get("user_id"), "bid": bid_amount},
+            f"{BID_SERVICE}/api/bids/placeBid",
+            json={
+                "auctionId": str(id),
+                "price": bid_amount,
+                "userId": str(session.get("user_id"))
+            },
+            headers={"Authorization": f"Bearer {session.get('token')}"}  # pass the auth token
         )
+        
         if response.ok:
-            flash("Bid placed successfully", "success")
+            data = response.json()
+            if data.get("status") == "SUCCESS":
+                flash("Bid placed successfully", "success")
+            else:
+                flash(data.get("message", "Failed to place bid"), "danger")
         else:
             flash("Failed to place bid", "danger")
     except requests.exceptions.RequestException:
         flash("Service unavailable", "danger")
     return redirect(url_for("view_auction", id=id))
 
+# Add a new route to get WebSocket URL
+@app.route("/ws-config")
+@login_required
+def ws_config():
+    return {"wsUrl": f"{NOTIFICATION_WS}/ws/subscribe"}
 
 @app.route("/auction/<int:id>/purchase", methods=["POST"])
 @login_required

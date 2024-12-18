@@ -10,17 +10,21 @@
                 <p class="card-text">{{ auction.description }}</p>
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item">Initial Price: ${{ auction.initialPrice }}</li>
-                    <li class="list-group-item">Current Price: ${{ auction.currentPrice }}</li>
+                    <li class="list-group-item">Current Price: $<span id="currentPrice">{{ auction.currentPrice }}</span></li>
                     <li class="list-group-item">Minimum Price: ${{ auction.minimumPrice }}</li>
-                    <li class="list-group-item">Status: {{ auction.status }}</li>
+                    <li class="list-group-item">Status: <span id="auctionStatus">{{ auction.status }}</span></li>
                     <li class="list-group-item">Type: {{ auction.type }}</li>
                     <li class="list-group-item">Start Time: {{ auction.startTime }}</li>
                     {% if auction.duration %}
                     <li class="list-group-item">Duration: {{ auction.duration }} minutes</li>
                     {% endif %}
-                    <li class="list-group-item">Last Updated: {{ auction.priceUpdatedAt }}</li>
+                    <li class="list-group-item">Last Updated: <span id="lastUpdated">{{ auction.priceUpdatedAt }}</span></li>
                 </ul>
             </div>
+        </div>
+
+        <div id="bidNotification" class="alert alert-info d-none">
+            New bid received!
         </div>
 
         {% if auction.status == 'WON' %}
@@ -28,7 +32,7 @@
                 <div class="card mb-4">
                     <div class="card-body">
                         <h5 class="card-title text-success">🎉 Congratulations! You won this auction!</h5>
-                        <p class="card-text">Winning bid: ${{ highest_bid.bidderPrice }}</p>
+                        <p class="card-text">Winning bid: $<span id="winningBid">{{ highest_bid.bidderPrice }}</span></p>
                         <form method="POST" action="{{ url_for('purchase_auction', id=auction.id) }}" class="mb-4">
                             <button type="submit" class="btn btn-success btn-lg">
                                 <i class="bi bi-cart-check"></i> Complete Purchase (${{ highest_bid.bidderPrice }})
@@ -50,14 +54,59 @@
         {% endif %}
         
         {% if auction.status == 'ACTIVE' %}
-        <form method="POST" action="{{ url_for('place_bid', id=auction.id) }}">
+        <form method="POST" action="{{ url_for('place_bid', id=auction.id) }}" id="bidForm">
             <div class="mb-3">
                 <label for="bid" class="form-label">Your Bid</label>
-                <input type="number" step="0.01" class="form-control" id="bid" name="bid" required>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" step="0.01" class="form-control" id="bid" name="bid" required>
+                    <button type="submit" class="btn btn-primary">Place Bid</button>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Place Bid</button>
         </form>
         {% endif %}
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch WebSocket configuration
+    fetch('/ws-config')
+        .then(response => response.json())
+        .then(config => {
+            const ws = new WebSocket(`${config.wsUrl}?auction_id={{ auction.id }}`);
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                // Update price and other information
+                document.getElementById('currentPrice').textContent = data.newAmount.toFixed(2);
+                document.getElementById('lastUpdated').textContent = new Date(data.timestamp).toLocaleString();
+                
+                // Show notification
+                const notification = document.getElementById('bidNotification');
+                notification.textContent = `New bid: $${data.newAmount.toFixed(2)}`;
+                notification.classList.remove('d-none');
+                
+                // Hide notification after 3 seconds
+                setTimeout(() => {
+                    notification.classList.add('d-none');
+                }, 3000);
+                
+                // If auction is won, reload the page
+                if (data.status === 'WON') {
+                    location.reload();
+                }
+            };
+            
+            ws.onclose = function() {
+                console.log('WebSocket connection closed');
+                // Attempt to reconnect after 5 seconds
+                setTimeout(() => {
+                    location.reload();
+                }, 5000);
+            };
+        });
+});
+</script>
 {% endblock %}

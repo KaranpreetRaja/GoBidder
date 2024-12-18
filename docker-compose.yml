@@ -102,13 +102,23 @@ services:
       - AUTH_API=http://auth-service:8081
       - PAYMENT_API=http://payment-service:8082
       - AUCTION_API=http://auction-service:8083
-      - FLASK_ENV=production
-      - FLASK_APP=app.py
+      - BID_SERVICE=http://bid-service:8084
+      - NOTIFICATION_WS=ws://notification-service:8085
+      - FLASK_ENV=development
+      - PYTHONUNBUFFERED=1
     depends_on:
       - auth-service
       - auction-service
+      - payment-service
+      - bid-service
+      - notification-service
     networks:
       - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   zookeeper:
     image: bitnami/zookeeper:latest
