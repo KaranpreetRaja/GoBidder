@@ -48,6 +48,16 @@ public class AuctionRepositoryConcurrentProxy implements AuctionRepository {
     }
 
     @Override
+    public boolean existsByName(String name) {
+        try {
+            lock.lock();
+            return repository.existsByName(name);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     public List<Auction> findAll() {
         try {
             lock.lock();

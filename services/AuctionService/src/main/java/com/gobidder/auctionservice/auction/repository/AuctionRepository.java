@@ -13,6 +13,7 @@ public interface AuctionRepository {
     Auction create(Auction auction);
     void delete(Long id);
     Auction findById(Long auctionId);
+    boolean existsByName(String name);
     Auction updateStatus(Long auctionId, AuctionStatusEnum status);
     Auction startAuction(Long auctionId, LocalDateTime start);
     Auction updatePrice(Long auctionId, Double price);
