@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
-public class GrpcConfig {
+public class GrpcClientConfig {
     @Value("${grpc.auction.host}")
     private String host;
 
