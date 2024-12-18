@@ -49,6 +49,11 @@ public class AuctionJpaRepositoryAdapter implements AuctionRepository {
     }
 
     @Override
+    public boolean existsByName(String name) {
+        return this.repository.existsAuctionByName(name);
+    }
+
+    @Override
     public Auction updateStatus(Long auctionId, AuctionStatusEnum status) {
         Auction auction = this.findById(auctionId);
         auction.setStatus(status);

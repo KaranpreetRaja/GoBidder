@@ -1,0 +1,4 @@
+.invert-text {
+    filter: invert(1);
+    mix-blend-mode: difference;
+}
