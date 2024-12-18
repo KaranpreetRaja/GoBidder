@@ -2,6 +2,7 @@ package com.gobidder.auctionservice.auction.repository;
 
 import com.gobidder.auctionservice.auction.Auction;
 import com.gobidder.auctionservice.auction.AuctionStatusEnum;
+import com.gobidder.auctionservice.auction.AuctionTypeEnum;
 import com.gobidder.auctionservice.auction.dto.BidUpdateMessage;
 import com.gobidder.auctionservice.bidder.Bidder;
 import com.gobidder.auctionservice.bidder.BidderRepository;
@@ -107,10 +108,16 @@ public class AuctionJpaRepositoryAdapter implements AuctionRepository {
             bidder.setUserId(parsedBidderId);
             bidder.setBidderPrice(message.getNewAmount());
 
-            // Update and save the auction
+            // Update auction with bid information
             auction.setHighestBidder(bidder.getUserId(), bidder.getBidderPrice());
             auction.setTotalBids(auction.getTotalBids() + 1);
             auction.setCurrentPrice(message.getNewAmount());
+
+            // If this is a Dutch auction with a valid bid, end the auction immediately
+            if (auction.getType() == AuctionTypeEnum.DUTCH) {
+                auction.setStatus(AuctionStatusEnum.WON);
+                logger.info("Dutch auction {} won by bidder {}", auctionId, parsedBidderId);
+            }
 
             logger.debug("Saving auction with updated bidder: {}", auction);
             return this.repository.save(auction);

@@ -156,6 +156,10 @@ public class AuctionService {
 //            this.scheduleDutchAuctionPriceDecrease(auction);
 //        }
 
+        if (auction.getType().equals(AuctionTypeEnum.FORWARD)) {
+            this.scheduleForwardAuctionEnd(auction);
+        }
+
         AuctionTypeEnum auctionType = auction.getType();
 
         // calculate values for the init auction GRPC call
