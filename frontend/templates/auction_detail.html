@@ -7,19 +7,47 @@
         <h2>{{ auction.name }}</h2>
         <div class="card mb-4">
             <div class="card-body">
-                <p class="card-text">{{ auction.description }}</p>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Initial Price: ${{ auction.initialPrice }}</li>
-                    <li class="list-group-item">Current Price: $<span id="currentPrice">{{ auction.currentPrice }}</span></li>
-                    <li class="list-group-item">Minimum Price: ${{ auction.minimumPrice }}</li>
-                    <li class="list-group-item">Status: <span id="auctionStatus">{{ auction.status }}</span></li>
-                    <li class="list-group-item">Type: {{ auction.type }}</li>
-                    <li class="list-group-item">Start Time: {{ auction.startTime }}</li>
-                    {% if auction.duration %}
-                    <li class="list-group-item">Duration: {{ auction.duration }} minutes</li>
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h5 class="card-subtitle mb-3 text-muted">Auction Details</h5>
+                        <p class="card-text">{{ auction.description }}</p>
+                    </div>
+                    {% if auction.auctionImageUrl %}
+                    <div class="col-md-4">
+                        <img src="{{ auction.auctionImageUrl }}" class="img-fluid rounded" alt="Auction image">
+                    </div>
                     {% endif %}
-                    <li class="list-group-item">Last Updated: <span id="lastUpdated">{{ auction.priceUpdatedAt }}</span></li>
-                </ul>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Price Information</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Initial Price: ${{ auction.initialPrice }}</li>
+                            <li class="list-group-item">Current Price: $<span id="currentPrice">{{ auction.currentPrice }}</span></li>
+                            <li class="list-group-item">Minimum Price: ${{ auction.minimumPrice }}</li>
+                            <li class="list-group-item">Total Bids: <span id="totalBids">{{ auction.totalBids }}</span></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Auction Status</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Status: <span id="auctionStatus" class="badge {% if auction.status == 'ACTIVE' %}bg-success{% elif auction.status == 'WON' %}bg-primary{% else %}bg-secondary{% endif %}">{{ auction.status }}</span></li>
+                            <li class="list-group-item">Type: <span class="badge {% if auction.type == 'DUTCH' %}bg-warning{% else %}bg-info{% endif %}">{{ auction.type }}</span></li>
+                            <li class="list-group-item">Started: {{ auction.startTime.split('T')[0] }} at {{ auction.startTime.split('T')[1][:5] }}</li>
+                            {% if auction.duration %}
+                            <li class="list-group-item">Time Remaining: <span id="timeRemaining">Calculating...</span></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="text-muted small">
+                    Last Updated: <span id="lastUpdated">{{ auction.priceUpdatedAt }}</span>
+                    {% if auction.location %}
+                    | Location: {{ auction.location }}
+                    {% endif %}
+                </div>
             </div>
         </div>
 
@@ -28,6 +56,14 @@
         </div>
 
         {% if auction.status == 'WON' %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Debug Information</h6>
+                    <p>Current User ID: {{ session.get('user_id') }}</p>
+                    <p>Winning User ID: {{ highest_bid.userId if highest_bid else 'No winner data' }}</p>
+                </div>
+            </div>
+
             {% if highest_bid and highest_bid.userId == session.get('user_id') %}
                 <div class="card mb-4">
                     <div class="card-body">
@@ -42,7 +78,7 @@
                 </div>
             {% else %}
                 <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> This auction has been won
+                    <i class="bi bi-info-circle"></i> This auction has been won by user ID: {{ highest_bid.userId if highest_bid else 'Unknown' }}
                 </div>
             {% endif %}
         {% endif %}
@@ -68,7 +104,9 @@
     </div>
 </div>
 
+
 <script>
+
 document.addEventListener('DOMContentLoaded', function() {
     // Fetch WebSocket configuration
     fetch('/ws-config')
@@ -108,5 +146,65 @@ document.addEventListener('DOMContentLoaded', function() {
             };
         });
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const auctionId = "{{ auction.id }}";
+    let polling = null;
+    
+    function calculateTimeRemaining() {
+        const startTime = new Date("{{ auction.startTime }}");
+        const duration = parseInt("{{ auction.duration or 0 }}");
+        if (duration) {
+            const endTime = new Date(startTime.getTime() + (duration * 60000));
+            const now = new Date();
+            const timeLeft = endTime - now;
+            
+            if (timeLeft > 0) {
+                const minutes = Math.floor(timeLeft / 60000);
+                const seconds = Math.floor((timeLeft % 60000) / 1000);
+                return `${minutes}m ${seconds}s`;
+            }
+            return 'Auction ended';
+        }
+        return 'N/A';
+    }
+
+    function updateAuctionInfo() {
+        fetch(`/auction/${auctionId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('currentPrice').textContent = data.currentPrice.toFixed(2);
+                document.getElementById('totalBids').textContent = data.totalBids;
+                document.getElementById('auctionStatus').textContent = data.status;
+                document.getElementById('lastUpdated').textContent = new Date(data.priceUpdatedAt).toLocaleString();
+                
+                if (document.getElementById('timeRemaining')) {
+                    document.getElementById('timeRemaining').textContent = calculateTimeRemaining();
+                }
+
+                if (data.status === 'WON') {
+                    clearInterval(polling);
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error fetching auction updates:', error));
+    }
+
+    // Initial calculation
+    if (document.getElementById('timeRemaining')) {
+        document.getElementById('timeRemaining').textContent = calculateTimeRemaining();
+    }
+
+    // Start polling every 500ms
+    polling = setInterval(updateAuctionInfo, 500);
+
+    // Cleanup on page leave
+    window.addEventListener('beforeunload', function() {
+        if (polling) {
+            clearInterval(polling);
+        }
+    });
+});
 </script>
+
 {% endblock %}

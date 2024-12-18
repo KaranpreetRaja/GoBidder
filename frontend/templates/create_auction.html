@@ -47,6 +47,11 @@
                        min="1" required>
             </div>
 
+            <div class="mb-3">
+                <label for="auctionImageUrl" class="form-label">Image URL</label>
+                <input type="text" class="form-control" id="auctionImageUrl" name="auctionImageUrl">
+            </div>
+
             <div class="d-grid gap-2">
                 <button type="submit" class="btn btn-primary">Create Auction</button>
                 <a href="{{ url_for('auctions') }}" class="btn btn-outline-secondary">Cancel</a>

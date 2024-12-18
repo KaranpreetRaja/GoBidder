@@ -157,6 +157,7 @@ def create_auction():
                 "startTime": request.form["startTime"],
                 "minimumPrice": float(request.form["minimumPrice"]),
                 "duration": int(request.form["duration"]),
+                "auctionImageUrl": request.form["auctionImageUrl"]
             }
             response = requests.post(f"{AUCTION_API}/auction", json=data)
             if response.ok:
@@ -177,10 +178,25 @@ def view_auction(id):
         response = requests.get(f"{AUCTION_API}/auction/{id}")
         if response.ok:
             auction = response.json()
-            bid_response = requests.get(f"{AUCTION_API}/auction/{id}/bid")
-            highest_bid = bid_response.json() if bid_response.ok else None
+            
+            # If auction is won, create highest_bid object from auction data
+            if auction.get('status') == 'WON' and auction.get('highestBidderId'):
+                highest_bid = {
+                    'userId': auction['highestBidderId'],
+                    'bidderPrice': auction['currentPrice']
+                }
+            else:
+                # For non-won auctions, get latest bid info
+                bid_response = requests.get(
+                    f"{AUCTION_API}/auction/{id}/bid",
+                    headers={"Authorization": f"Bearer {session.get('token')}"}
+                )
+                highest_bid = bid_response.json() if bid_response.ok else None
+                
             return render_template(
-                "auction_detail.html", auction=auction, highest_bid=highest_bid
+                "auction_detail.html", 
+                auction=auction, 
+                highest_bid=highest_bid
             )
         flash("Auction not found", "danger")
     except requests.exceptions.RequestException:
@@ -243,19 +259,14 @@ def ws_config():
 @login_required
 def purchase_auction(id):
     try:
-        bid_response = requests.get(
-            f"{AUCTION_API}/auction/{id}/bid",
-            headers={"Authorization": f'Bearer {session.get("token")}'},
-        )
-
-        if not bid_response.ok:
-            flash("Could not verify auction winner", "danger")
+        response = requests.get(f"{AUCTION_API}/auction/{id}")
+        if not response.ok:
+            flash("Could not verify auction details", "danger")
             return redirect(url_for("view_auction", id=id))
-
-        bid_data = bid_response.json()
-
-        if bid_data["userId"] != session.get("user_id"):
-            flash("You did not win the auction.", "danger")
+            
+        auction = response.json()
+        if auction["status"] != "WON" or auction["highestBidderId"] != session.get("user_id"):
+            flash("You are not the winner of this auction", "danger")
             return redirect(url_for("view_auction", id=id))
 
         payment_response = requests.post(
@@ -263,12 +274,15 @@ def purchase_auction(id):
             json={"token": session.get("token")},
         )
 
-        response_data = payment_response.json()
-        if payment_response.ok and response_data.get("success"):
-            flash("Payment processed successfully", "success")
-            return redirect(url_for("auction_receipt", id=id))
+        if payment_response.ok and payment_response.json().get("success"):
+            # Create receipt data
+            receipt_data = {
+                "auction": auction,
+                "bidderPrice": auction["currentPrice"]
+            }
+            return render_template("receipt.html", bid=receipt_data)
         else:
-            session["payment_error"] = response_data.get("message", "Payment failed")
+            session["payment_error"] = payment_response.json().get("message", "Payment failed")
             return redirect(url_for("payment_failure"))
 
     except requests.exceptions.RequestException:
