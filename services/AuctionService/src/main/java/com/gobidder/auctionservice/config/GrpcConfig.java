@@ -1,4 +1,5 @@
-package com.gobidder.bid_service.config;
+package com.gobidder.auctionservice.config;
+
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -8,10 +9,10 @@ import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 public class GrpcConfig {
-    @Value("${grpc.auction.host}")
+    @Value("${grpc.bid.host}")
     private String host;
 
-    @Value("${grpc.auction.port}")
+    @Value("${grpc.bid.port}")
     private int port;
 
     @Bean

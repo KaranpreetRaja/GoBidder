@@ -7,6 +7,7 @@ import com.gobidder.auctionservice.auction.repository.AuctionJpaRepository;
 import com.gobidder.auctionservice.auction.repository.AuctionRepository;
 import com.gobidder.auctionservice.auction.strategy.AuctionStrategy;
 import com.gobidder.auctionservice.auction.strategy.factory.AuctionStrategyFactory;
+import com.gobidder.auctionservice.grpc.AuctionGrpcClient;
 import com.gobidder.auctionservice.bidder.Bidder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -30,11 +32,13 @@ public class AuctionService {
 
     private final AuctionRepository auctionRepository;
     private final TaskScheduler taskScheduler;
+    private final AuctionGrpcClient auctionGrpcClient;
 
     @Autowired
-    public AuctionService(AuctionRepository auctionRepository, TaskScheduler taskScheduler) {
+    public AuctionService(AuctionRepository auctionRepository, TaskScheduler taskScheduler, AuctionGrpcClient auctionGrpcClient) {
         this.auctionRepository = auctionRepository;
         this.taskScheduler = taskScheduler;
+        this.auctionGrpcClient = auctionGrpcClient;
     }
 
     /**
@@ -68,7 +72,9 @@ public class AuctionService {
             .initialPrice(auctionCreateRequestDto.getInitialPrice())
             .build();
 
-        return this.auctionRepository.create(auction);
+        auction = this.auctionRepository.create(auction);
+
+        return auction;
     }
 
     /**
@@ -143,10 +149,42 @@ public class AuctionService {
         auction = this.auctionRepository.startAuction(auctionId, LocalDateTime.now());
 
         // Schedule auction task for the future
-        if (auction.getType().equals(AuctionTypeEnum.FORWARD)) {
-            this.scheduleForwardAuctionEnd(auction);
-        } else if (auction.getType().equals(AuctionTypeEnum.DUTCH)) {
-            this.scheduleDutchAuctionPriceDecrease(auction);
+        // TODO: Remove as this is the old implementation
+//        if (auction.getType().equals(AuctionTypeEnum.FORWARD)) {
+//            this.scheduleForwardAuctionEnd(auction);
+//        } else if (auction.getType().equals(AuctionTypeEnum.DUTCH)) {
+//            this.scheduleDutchAuctionPriceDecrease(auction);
+//        }
+
+        AuctionTypeEnum auctionType = auction.getType();
+
+        // calculate values for the init auction GRPC call
+        Long endTimeUnix = null;
+        Double dutchAuctionStepSize = null;
+        Double dutchAuctionMinimumPrice = null;
+
+        if (auctionType.equals(AuctionTypeEnum.FORWARD)) {
+            endTimeUnix = auction.getStartTime()
+                    .plusSeconds(auction.getDuration())
+                    .toEpochSecond(ZoneOffset.UTC);
+        } else if (auctionType.equals(AuctionTypeEnum.DUTCH)) {
+            dutchAuctionStepSize = 1.0; // TODO: change to the value stored in database
+            dutchAuctionMinimumPrice = auction.getMinimumPrice();
+        }
+
+        // Notify bid service via gRPC
+        try {
+            auctionGrpcClient.initAuction(
+                    auction.getId().toString(),
+                    auction.getType().toString(),
+                    auction.getInitialPrice(),
+                    endTimeUnix,
+                    dutchAuctionStepSize,
+                    dutchAuctionMinimumPrice
+            );
+            logger.info("Successfully initialized auction {} in bid_service", auction.getId());
+        } catch (Exception e) {
+            logger.error("Failed to initialize auction {} in bid_service", auction.getId(), e);
         }
 
         return auction;
@@ -221,12 +259,15 @@ public class AuctionService {
      * @param auction The auction to schedule the price decrease of.
      */
     public void scheduleDutchAuctionPriceDecrease(Auction auction) {
+        
         if (!auction.getType().equals(AuctionTypeEnum.DUTCH)) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
                 "Only dutch auctions can have scheduled price decreases"
             );
         }
+
+        // NOTE: This is the old implementation of the price decreases on the auction service. This functionality has now been moved to the bid service
 
         Instant auctionPriceDecreaseInstant = LocalDateTime.now()
             .plusSeconds(PRICE_DECREASE_INTERVAL_SECONDS)
@@ -269,6 +310,7 @@ public class AuctionService {
         );
         logger.info("Scheduled auction price decrease for auction id {} at {}",
             auction.getId(), auctionPriceDecreaseInstant);
+
     }
 
     /**

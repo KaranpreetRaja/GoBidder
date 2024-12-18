@@ -10,32 +10,41 @@ import com.gobidder.bid_service.proto.InitAuctionResponse;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import net.devh.boot.grpc.server.service.GrpcService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @GrpcService
 @RequiredArgsConstructor
 public class AuctionGrpcServer extends AuctionServiceGrpc.AuctionServiceImplBase {
+    private static final Logger logger = LoggerFactory.getLogger(AuctionGrpcServer.class);
     private final AuctionCacheRepository auctionCacheRepository;
+    private final BidService bidService;
 
     @Override
     public void initAuction(InitAuctionRequest request, StreamObserver<InitAuctionResponse> responseObserver) {
         try {
-            AuctionCacheModel auctionCache = new AuctionCacheModel();
-            auctionCache.setAuctionId(request.getAuctionId());
-            auctionCache.setAuctionType(request.getAuctionType());
-            auctionCache.setCurrentPrice(request.getStartingPrice());
-            auctionCache.setActive(true);
-            auctionCache.setLastUpdateTimestamp(System.currentTimeMillis());
-            auctionCache.setTotalAuctionBids(0);
+            logger.info("Received request to initialize auction with ID: {} and type: {}",
+                    request.getAuctionId(), request.getAuctionType());
 
-            auctionCacheRepository.save(auctionCache);
+            bidService.handleInitAuction(
+                    request.getAuctionId(),
+                    request.getAuctionType(),
+                    request.getStartingPrice(),
+                    request.getEndTimeUnix(),
+                    request.getDutchAuctionStepSize(),
+                    request.getDutchAuctionMinimumPrice()
+            );
 
             responseObserver.onNext(InitAuctionResponse.newBuilder()
                     .setSuccess(true)
                     .setMessage("Auction initialized successfully")
                     .build());
             responseObserver.onCompleted();
+
         } catch (Exception e) {
+            logger.error("Failed to initialize auction: {}", e.getMessage(), e);
             responseObserver.onNext(InitAuctionResponse.newBuilder()
                     .setSuccess(false)
                     .setMessage("Failed to initialize auction: " + e.getMessage())

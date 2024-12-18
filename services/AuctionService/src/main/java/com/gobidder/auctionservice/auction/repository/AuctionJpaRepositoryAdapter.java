@@ -84,19 +84,21 @@ public class AuctionJpaRepositoryAdapter implements AuctionRepository {
         try {
             logger.debug("Updating highest bidder for auction {} with message: {}", auctionId, message);
 
-            // Convert string ID to Long safely
-            Long parsedAuctionId = Long.parseLong(message.getAuctionId());
-            Long parsedBidderId = Long.parseLong(message.getBidderId());
-
             // Get auction
-            Auction auction = this.findById(parsedAuctionId);
+            Auction auction = this.findById(auctionId);
+
+            // For Dutch auction price updates (no bidder)
+            if (message.getBidderId() == null || message.getBidderId().isEmpty()) {
+                auction.setCurrentPrice(message.getNewAmount());
+                logger.debug("Updating price for Dutch auction: {}", auction);
+                return this.repository.save(auction);
+            }
+
+            // For actual bids with bidder ID
+            Long parsedBidderId = Long.parseLong(message.getBidderId());
 
             // Create or update bidder
             Bidder bidder = new Bidder();
-            bidder.setUserId(parsedBidderId);
-            bidder.setBidderPrice(message.getNewAmount());
-
-            // Set bidder details
             bidder.setUserId(parsedBidderId);
             bidder.setBidderPrice(message.getNewAmount());
 

@@ -14,28 +14,39 @@ import lombok.RequiredArgsConstructor;
 public class DutchAuctionStrategy implements AuctionStrategy {
     private final AuctionCacheRepository auctionCacheRepository;
     private final KafkaProducerService kafkaProducerService;
-    private static final Logger logger = LoggerFactory.getLogger(ForwardAuctionStrategy.class);
+    private static final Logger logger = LoggerFactory.getLogger(DutchAuctionStrategy.class);
 
     @Override
     public boolean isBidPossible(AuctionCacheModel auctionModel, BidRequest bidRequest) {
-        boolean isPriceEqualOrHigher = bidRequest.getPrice() >= auctionModel.getCurrentPrice();
+        boolean isPriceEqualOrHigher = auctionModel.getCurrentPrice() - bidRequest.getPrice() <= 0;
         boolean isAuctionActive = auctionModel.isActive();
-        boolean isNoCurrentBidder = auctionModel.getCurrentWinningBidderId() == null;
 
-        logger.debug("bidRequest.getUserId(): {}", bidRequest.getUserId());
-        logger.debug("auctionModel.getCurrentWinningBidderId(): {}", auctionModel.getCurrentWinningBidderId());
-        logger.debug("isPriceEqual: {}", isPriceEqualOrHigher);
-        logger.debug("isAuctionActive: {}", isAuctionActive);
-        logger.debug("isNoCurrentBidder: {}", isNoCurrentBidder);
+        // Check if current winner is null or empty string
+        String currentWinner = auctionModel.getCurrentWinningBidderId();
+        boolean isNoCurrentBidder = currentWinner == null || currentWinner.trim().isEmpty();
 
-        return isPriceEqualOrHigher && isAuctionActive && isNoCurrentBidder;
+        logger.debug("Checking Dutch auction bid validity:");
+        logger.debug("Current price: {}, Bid price: {}", auctionModel.getCurrentPrice(), bidRequest.getPrice());
+        logger.debug("Price match: {}", isPriceEqualOrHigher);
+        logger.debug("Is auction active: {}", isAuctionActive);
+        logger.debug("Current winner: '{}', No current bidder: {}", currentWinner, isNoCurrentBidder);
+
+        boolean isValid = isPriceEqualOrHigher && isAuctionActive && isNoCurrentBidder;
+        logger.info("Dutch auction bid validity result: {} (price match: {}, active: {}, no winner: {})",
+                isValid, isPriceEqualOrHigher, isAuctionActive, isNoCurrentBidder);
+
+        return isValid;
     }
 
     @Override
     public BidResponse publishBid(AuctionCacheModel auctionModel, BidRequest bidRequest) {
         try {
-            // For Dutch auction, first bid at the current price wins
-            if (auctionModel.getCurrentWinningBidderId() != null) {
+            logger.info("Processing bid for Dutch auction ID: {}, price: {}, bidder: {}",
+                    auctionModel.getAuctionId(), bidRequest.getPrice(), bidRequest.getUserId());
+
+            String currentWinner = auctionModel.getCurrentWinningBidderId();
+            if (currentWinner != null && !currentWinner.trim().isEmpty()) {
+                logger.error("Auction already has a winning bid from bidder: {}", currentWinner);
                 return createErrorResponse("Auction already has a winning bid");
             }
 
@@ -57,8 +68,10 @@ public class DutchAuctionStrategy implements AuctionStrategy {
                     auctionModel.getTotalAuctionBids()
             );
 
+            logger.info("Successfully processed winning bid for Dutch auction ID: {}", auctionModel.getAuctionId());
             return createSuccessResponse();
         } catch (Exception e) {
+            logger.error("Failed to process Dutch auction bid: {}", e.getMessage(), e);
             return createErrorResponse("Failed to process bid: " + e.getMessage());
         }
     }
@@ -75,5 +88,28 @@ public class DutchAuctionStrategy implements AuctionStrategy {
         response.setStatus("FAILED");
         response.setMessage(message);
         return response;
+    }
+
+    // Performs update by copying lines 48-58, publish bid to kafka and redis cache
+    public void updateAuctionPrice(AuctionCacheModel auctionModel, double newPrice) {
+        try {
+            auctionModel.setCurrentPrice(newPrice);
+            auctionModel.setLastUpdateTimestamp(System.currentTimeMillis());
+
+            logger.info("Updated auction price for auction ID {} to new price: {}", auctionModel.getAuctionId(), newPrice);
+
+            auctionCacheRepository.save(auctionModel);
+
+            kafkaProducerService.sendBidUpdate(
+                    auctionModel.getAuctionId(),
+                    auctionModel.getCurrentPrice(),
+                    auctionModel.getCurrentWinningBidderId(),
+                    auctionModel.getLastUpdateTimestamp(),
+                    auctionModel.getTotalAuctionBids()
+            );
+            logger.info("Published updated auction price to Kafka for auction ID {}", auctionModel.getAuctionId());
+        } catch (Exception e) {
+            logger.error("Failed to update Dutch auction price for auction ID {}: {}", auctionModel.getAuctionId(), e.getMessage(), e);
+        }
     }
 }
