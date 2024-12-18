@@ -10,7 +10,14 @@ import com.gobidder.bid_service.proto.*;
 import com.gobidder.bid_service.service.strategy.AuctionStrategyFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -23,22 +30,18 @@ public class BidService {
 
     private static final Logger logger = LoggerFactory.getLogger(BidService.class);
     private final TaskScheduler taskScheduler;
-    private AuctionService auctionService;
     private RedisTemplate<String, Object> redisTemplate;
 
-    // TODO: Maybe remove this constructor
-    public BidService(TaskScheduler taskScheduler, RedisTemplate<String, Object> redisTemplate, AuctionGrpcClient auctionGrpcClient) {
-        this.taskScheduler = taskScheduler;
-        this.redisTemplate = redisTemplate;
-        this.auctionGrpcClient = auctionGrpcClient;
-    }
 
 
     public BidResponse processBid(BidRequest bidRequest) {
         // Step 1: Get or fetch auction data
         AuctionCacheModel auctionCache = getOrFetchAuctionData(bidRequest.getAuctionId());
 
+        logger.info("Processing bid for auction ID: {}", bidRequest.getAuctionId());
+
         if (!auctionCache.isActive()) {
+            logger.info("Auction is not active. The auctionId is: {}, isActive: {}, lastUpdateTimestamp: {}", auctionCache.getAuctionId(), auctionCache.isActive(), auctionCache.getLastUpdateTimestamp());
             return createBidResponse("FAILED", "Auction is not active. The auctionId is: " + auctionCache.getAuctionId() + ", isActive: " + auctionCache.isActive() + ", lastUpdateTimestamp: " + auctionCache.getLastUpdateTimestamp());
         }
 
@@ -47,6 +50,7 @@ public class BidService {
 
         // Step 3: Check if bid is possible
         if (!strategy.isBidPossible(auctionCache, bidRequest)) {
+            logger.info("Bid is not valid for this auction where auction data is: auctionId: {}, currentPrice: {}, currentWinningBidderId: {}, isActive: {}, lastUpdateTimestamp: {}, totalAuctionBids: {}, auctionType: {} And bid information is: userId: {}, price: {}, auctionId: {}", auctionCache.getAuctionId(), auctionCache.getCurrentPrice(), auctionCache.getCurrentWinningBidderId(), auctionCache.isActive(), auctionCache.getLastUpdateTimestamp(), auctionCache.getTotalAuctionBids(), auctionCache.getAuctionType(), bidRequest.getUserId(), bidRequest.getPrice(), bidRequest.getAuctionId());
             return createBidResponse("FAILED", "Bid is not valid for this auction where \n\nauction data is: auctionId: " + auctionCache.getAuctionId() + ", currentPrice: " + auctionCache.getCurrentPrice() + ", currentWinningBidderId: " + auctionCache.getCurrentWinningBidderId() + ", isActive: " + auctionCache.isActive() + ", lastUpdateTimestamp: " + auctionCache.getLastUpdateTimestamp() + ", totalAuctionBids: " + auctionCache.getTotalAuctionBids() + ", auctionType: " + auctionCache.getAuctionType() + "\n\n And bid information is: userId: " + bidRequest.getUserId() + ", price: " + bidRequest.getPrice() + ", auctionId: " + bidRequest.getAuctionId());
         }
 
@@ -100,29 +104,55 @@ public class BidService {
     }
 
     // TODO: Change the parameters/fields so they reference the proto buffer
-    public void startDutchCountdown(Long auctionId, double priceDecrease, int intervalSeconds) {
+    public void startDutchCountdown(String auctionId, double currentPrice, double stepSize, double minimumPrice, int intervalSeconds) {
+        logger.info("Start Dutch auction countdown for auction ID {} with current price {}, step size {}, min price {}, interval {}s", auctionId, currentPrice, stepSize, minimumPrice, intervalSeconds);
+
         Instant nextDecreaseInstant = LocalDateTime.now()
                 .plusSeconds(intervalSeconds)
                 .atZone(ZoneId.systemDefault())
                 .toInstant();
 
-        this.taskScheduler.schedule(
-            () -> {
+        this.taskScheduler.schedule(() -> {
                 try {
-                    logger.info("Reducing price of auction id {} by {}",
-                    a.getId(), PRICE_DECREASE_AMOUNT);
+                    // gets current auction state from redis cache
+                    AuctionCacheModel auction = getOrFetchAuctionData(auctionId);
 
-                    double updatedPrice = auctionGrpcClient.decreasePrice(auctionId, priceDecrease);
-                    redisTemplate.opsForValue().set("auction_price_" + auctionId, updatedPrice);
-                    logger.info("Updated auction price for ID {} stored in Redis: {}", auctionId, updatedPrice);
+                    if (!auction.isActive()) {
+                        logger.info("Dutch auction {} is no longer active, stopping price decreases", auctionId);
+                        return;
+                    }
 
-                    auctionGrpcClient.performBidUpdate(auctionId, updatedPrice);
-                    if (updatedPrice > 0) {
-                        startDutchAuctionCountdown(auctionId, priceDecrease, intervalSeconds);
+                    // calculates new price
+                    double newPrice = auction.getCurrentPrice() - stepSize;
+
+                    if (newPrice < minimumPrice) {
+                        logger.info("Dutch auction {} reached min price ({}) as current price is {}, ending auction" , auctionId, minimumPrice, newPrice);
+                        auction.setActive(false);
+                        auctionCacheRepository.save(auction);
+                        return;
                     }
-                    else {
-                        logger.info("Dutch auction id {} not active, not scheduling further", auctionId);
-                    }
+
+                    // update auction model with new price
+                    auction.setCurrentPrice(newPrice);
+                    auction.setLastUpdateTimestamp(System.currentTimeMillis());
+                    auctionCacheRepository.save(auction);
+
+                    // update redis cache
+                    redisTemplate.opsForValue().set("auction_price_" + auctionId, newPrice);
+
+                    // send kafka bid update
+                    kafkaProducerService.sendBidUpdate(
+                            auctionId,
+                            newPrice,
+                            auction.getCurrentWinningBidderId(),
+                            auction.getLastUpdateTimestamp(),
+                            auction.getTotalAuctionBids()
+                    );
+
+                    logger.info("Updated Dutch auction {} price to {}", auctionId, newPrice);
+
+                    // schedule next price decrease
+                    startDutchCountdown(auctionId, newPrice, stepSize, minimumPrice, intervalSeconds);
                 } catch (Exception e) {
                     logger.error("Error during Dutch auction countdown for ID {}: {}", auctionId, e.getMessage());
                 }
