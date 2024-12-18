@@ -32,25 +32,26 @@ public class BidUpdateKafkaConsumer {
                 return;
             }
 
-            if (message.getBidderId() == null || message.getBidderId().isEmpty()) {
-                logger.error("Received bid update message with null or empty bidder ID for auction: {}",
-                        message.getAuctionId());
-                return;
-            }
-
             if (message.getNewAmount() == null) {
                 logger.error("Received bid update message with null amount for auction: {}",
                         message.getAuctionId());
                 return;
             }
 
-            logger.info("Received bid update message for auction ID: {} from bidder: {} with amount: {}",
-                    message.getAuctionId(), message.getBidderId(), message.getNewAmount());
+            // Determine if this is a bidder update or automatic price update
+            if (message.getBidderId() == null || message.getBidderId().isEmpty()) {
+                logger.info("Received automatic price update message for auction ID: {} with new amount: {}",
+                        message.getAuctionId(), message.getNewAmount());
+            } else {
+                logger.info("Received bid update message for auction ID: {} from bidder: {} with amount: {}",
+                        message.getAuctionId(), message.getBidderId(), message.getNewAmount());
+            }
 
+            // Process the update regardless of bidder presence
             Long auctionId = Long.valueOf(message.getAuctionId());
             auctionService.updateHighestBidder(auctionId, message);
 
-            logger.info("Successfully processed bid update for auction ID: {}", auctionId);
+            logger.info("Successfully processed price update for auction ID: {}", auctionId);
 
         } catch (NumberFormatException e) {
             logger.error("Invalid numeric format in bid update message: {}", e.getMessage());
