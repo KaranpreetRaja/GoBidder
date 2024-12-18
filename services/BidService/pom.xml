@@ -141,6 +141,12 @@
 			<version>2.15.3</version>
 		</dependency>
 
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-census</artifactId>
+			<version>1.58.0</version>
+		</dependency>
+
 	</dependencies>
 
 	<dependencyManagement>
