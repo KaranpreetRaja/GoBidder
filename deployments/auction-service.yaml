@@ -24,6 +24,10 @@ spec:
         - containerPort: 8083
         - containerPort: 9090
         env:
+        - name: GRPC_BID_HOST
+          value: "bid-service"
+        - name: GRPC_BID_PORT
+          value: "9091"
         - name: GRPC_AUCTION_HOST
           value: "auction-service"
         - name: GRPC_AUCTION_PORT
